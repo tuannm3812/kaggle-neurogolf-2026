@@ -6,6 +6,7 @@ Kaggle notebooks for the NeuroGolf 2026 competition, focused first on a professi
 
 - `notebooks/01_eda.ipynb`: Kaggle-ready EDA for ARC-style task JSON files. It discovers input JSON files, normalizes task payloads, summarizes task coverage, visualizes train/test pair distributions, inspects grid geometry, reviews color-token usage, renders ARC examples, creates first-pass solver buckets, and exports lightweight summary CSVs.
 - `notebooks/02_baseline_models.ipynb`: Kaggle-ready baseline notebook that builds constant-output ONNX files for single-test-case tasks with provided test outputs. This is a submission-format sanity baseline, not a general ARC solver.
+- `notebooks/03_solver_diagnostics.ipynb`: Kaggle-ready diagnostic notebook that measures simple solver compatibility, shape-change patterns, color/palette behavior, connected components, and recommended solver tracks before deeper modeling.
 
 ## 2. Kaggle Usage
 
@@ -28,10 +29,11 @@ Upload or copy the notebook into Kaggle, attach the NeuroGolf 2026 competition/p
 - Isolate multiple-test-case tasks early because they need input-conditioned models or exact transformation logic.
 - Add object-level diagnostics next: connected components by color, bounding boxes, symmetry, repetition, and grid-line detection.
 - Add train-pair consistency checks for simple solver hypotheses such as identity, color map, crop, tile, scale, transpose, mirror, and mask-fill.
+- Use `03_solver_diagnostics.ipynb` to turn these checks into measurable coverage tables before implementing each solver family.
 
 ## 5. Baseline Direction
 
-The first baseline is a constant-output ONNX packaging baseline. It is useful for validating model file naming, tensor dtypes, input/output names, zip creation, and optional `onnxruntime` execution. It should be followed by solver baselines that condition on the input grid, especially for multiple-test-case tasks and any task where test outputs are not directly usable.
+The first baseline is a constant-output ONNX packaging baseline. It is useful for validating model file naming, tensor dtypes, input/output names, zip creation, and optional `onnxruntime` execution. The baseline notebook includes the official starter-notebook dependency pins for Kaggle: `numpy==2.4.4`, `onnx==1.21.0`, `onnxruntime==1.24.4`, and `onnx-tool==1.0.1`. It should be followed by solver baselines that condition on the input grid, especially for multiple-test-case tasks and any task where test outputs are not directly usable.
 
 ## 6. Project Rules
 

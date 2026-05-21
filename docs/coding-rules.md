@@ -18,4 +18,5 @@
 
 - Notebooks are expected to run on Kaggle.
 - Do not add local dependency installation cells unless a notebook explicitly needs a non-standard package.
+- For ONNX baseline notebooks, use the official starter-notebook Kaggle pins: `numpy==2.4.4`, `onnx==1.21.0`, `onnxruntime==1.24.4`, and `onnx-tool==1.0.1`.
 - Discover competition inputs from `/kaggle/input` rather than hard-coding a single dataset folder name.
