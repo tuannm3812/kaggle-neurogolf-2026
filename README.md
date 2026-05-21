@@ -5,6 +5,7 @@ Kaggle notebooks for the NeuroGolf 2026 competition, focused first on a professi
 ## 1. Notebook Index
 
 - `notebooks/01_eda.ipynb`: Kaggle-ready EDA for ARC-style task JSON files. It discovers input JSON files, normalizes task payloads, summarizes task coverage, visualizes train/test pair distributions, inspects grid geometry, reviews color-token usage, renders ARC examples, creates first-pass solver buckets, and exports lightweight summary CSVs.
+- `notebooks/02_baseline_models.ipynb`: Kaggle-ready baseline notebook that builds constant-output ONNX files for single-test-case tasks with provided test outputs. This is a submission-format sanity baseline, not a general ARC solver.
 
 ## 2. Kaggle Usage
 
@@ -12,12 +13,26 @@ Upload or copy the notebook into Kaggle, attach the NeuroGolf 2026 competition/p
 
 ## 3. EDA Key Points
 
-- Confirm data attachment first: the notebook reports discovered JSON files and loaded normalized tasks before any analysis.
-- Check expected task coverage against `task001` through `task400` before building per-task ONNX artifacts.
-- Treat same-shape and shape-changing tasks as separate solver-planning tracks.
-- Use color-token frequency and unique-color distributions to identify likely recoloring, masking, background, and object-based transformations.
-- Review diverse visual samples, not only the first task ids, before committing to solver families.
+- The Kaggle run discovered 800 JSON files and loaded 400 normalized tasks, with full expected-style coverage from `task001` through `task400`.
+- The dataset is mostly low-shot: median training examples per task is 3, with a range from 2 to 10.
+- Most tasks have one test case, but some have multiple test cases, so submission code must not assume a single invocation forever.
+- Shape-changing tasks are substantial: 138 / 400 tasks show train-time input/output shape changes, while 262 / 400 are same-shape in the training examples.
+- Input grids can reach 30x30, so larger-grid tasks should be used as ONNX cost and memory stress tests.
+- Color token `0` dominates both train inputs and outputs, which makes background handling a central baseline concern.
+- The provisional EDA buckets are: 138 shape-changing, 108 larger same-shape, 85 small same-shape, and 69 low-color same-shape tasks.
 
-## 4. Project Rules
+## 4. Deep-Dive EDA Backlog
+
+- Separate strong expansion/compression tasks from same-area tasks; these likely need different solver families.
+- Compare input/output color-set deltas to identify introduced-color, removed-color, and same-palette tasks.
+- Isolate multiple-test-case tasks early because they need input-conditioned models or exact transformation logic.
+- Add object-level diagnostics next: connected components by color, bounding boxes, symmetry, repetition, and grid-line detection.
+- Add train-pair consistency checks for simple solver hypotheses such as identity, color map, crop, tile, scale, transpose, mirror, and mask-fill.
+
+## 5. Baseline Direction
+
+The first baseline is a constant-output ONNX packaging baseline. It is useful for validating model file naming, tensor dtypes, input/output names, zip creation, and optional `onnxruntime` execution. It should be followed by solver baselines that condition on the input grid, especially for multiple-test-case tasks and any task where test outputs are not directly usable.
+
+## 6. Project Rules
 
 Notebook style and visualization conventions are documented in `docs/coding-rules.md`.
