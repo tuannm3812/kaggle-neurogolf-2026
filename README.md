@@ -33,7 +33,7 @@ Upload or copy the notebook into Kaggle, attach the NeuroGolf 2026 competition/p
 
 ## 5. Baseline Direction
 
-The first baseline is a constant-output ONNX packaging baseline. It is useful for validating model file naming, tensor dtypes, input/output names, zip creation, and optional `onnxruntime` execution. The baseline notebook includes the official starter-notebook dependency pins for Kaggle: `numpy==2.4.4`, `onnx==1.21.0`, `onnxruntime==1.24.4`, and `onnx-tool==1.0.1`. It should be followed by solver baselines that condition on the input grid, especially for multiple-test-case tasks and any task where test outputs are not directly usable.
+The first baseline is an ONNX packaging baseline. It writes the Kaggle-facing artifact to `/kaggle/working/submission.zip`, validates generated models with `onnxruntime` when available, and keeps a manifest of generated task models. Single-test tasks use constant-output models; structurally compatible multi-test tasks use an input-equality selector model. The baseline notebook includes the official starter-notebook dependency pins for Kaggle: `numpy==2.4.4`, `onnx==1.21.0`, `onnxruntime==1.24.4`, and `onnx-tool==1.0.1`. It should be followed by solver baselines that infer outputs from input grids rather than relying on public test outputs.
 
 ## 6. Project Rules
 
