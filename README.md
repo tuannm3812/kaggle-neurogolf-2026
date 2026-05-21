@@ -21,6 +21,7 @@ Upload or copy the notebook into Kaggle, attach the NeuroGolf 2026 competition/p
 - Input grids can reach 30x30, so larger-grid tasks should be used as ONNX cost and memory stress tests.
 - Color token `0` dominates both train inputs and outputs, which makes background handling a central baseline concern.
 - The provisional EDA buckets are: 138 shape-changing, 108 larger same-shape, 85 small same-shape, and 69 low-color same-shape tasks.
+- The latest EDA and diagnostics review is summarized in `docs/eda-diagnostics-insights.md`.
 
 ## 4. Deep-Dive EDA Backlog
 
