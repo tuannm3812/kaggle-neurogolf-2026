@@ -46,7 +46,7 @@ Current baseline behavior:
 
 - Single-test tasks use constant-output ONNX models.
 - Structurally compatible multi-test tasks use an input-equality selector model.
-- Unsupported tasks use a dynamic identity fallback so the archive remains complete.
+- Unsupported tasks use a dynamic-input constant fallback so the archive remains complete.
 - The generated archive is `submission.zip`.
 - A manifest records which model strategy was used for each task.
 
