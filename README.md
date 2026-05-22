@@ -1,41 +1,65 @@
 # NeuroGolf 2026
 
-Kaggle notebooks for the NeuroGolf 2026 competition, focused first on a professional EDA workflow for ARC-style task data.
+This repository develops a structured solution path for the NeuroGolf 2026 competition. The current work focuses on understanding the ARC-style task distribution, measuring simple solver opportunities, and building a reliable ONNX submission pipeline before investing in higher-complexity solvers.
 
-## 1. Notebook Index
+## 1. Current Workflow
 
-- `notebooks/01_eda.ipynb`: Kaggle-ready EDA for ARC-style task JSON files. It discovers input JSON files, normalizes task payloads, summarizes task coverage, visualizes train/test pair distributions, inspects grid geometry, reviews color-token usage, renders ARC examples, creates first-pass solver buckets, and exports lightweight summary CSVs.
-- `notebooks/02_baseline_models.ipynb`: Kaggle-ready baseline notebook that builds constant-output ONNX files for single-test-case tasks with provided test outputs. This is a submission-format sanity baseline, not a general ARC solver.
-- `notebooks/03_solver_diagnostics.ipynb`: Kaggle-ready diagnostic notebook that measures simple solver compatibility, shape-change patterns, color/palette behavior, connected components, and recommended solver tracks before deeper modeling.
+- `notebooks/01_eda.ipynb` builds the task inventory: coverage, train/test counts, grid geometry, color usage, shape changes, visual samples, and first-pass solver buckets.
+- `notebooks/02_baseline_models.ipynb` builds the ONNX packaging baseline and writes a complete `submission.zip` containing `task001.onnx` through `task400.onnx`.
+- `notebooks/03_solver_diagnostics.ipynb` measures strict simple-solver compatibility, connected-component complexity, shape-change behavior, palette deltas, and recommended solver tracks.
 
-## 2. Kaggle Usage
+## 2. Key Findings
 
-Upload or copy the notebook into Kaggle, attach the NeuroGolf 2026 competition/public data, and run top-to-bottom. The notebook discovers JSON files under `/kaggle/input` and writes summary CSVs to `/kaggle/working`.
+- The benchmark load is complete: `400 / 400` normalized tasks are present.
+- The dataset is low-shot: the median task has `3` training examples, with a range from `2` to `10`.
+- Shape-changing tasks are a major segment: `138 / 400` tasks change shape in train pairs.
+- Most tasks have one test case, but `14` tasks have multiple test cases, so the submission pipeline must support more than one invocation pattern.
+- Color `0` dominates train inputs and outputs, making background handling a core primitive rather than a minor detail.
+- Palette behavior is mixed: `176` same-palette tasks, `91` removes-color tasks, `86` introduces-color tasks, and `47` tasks that both introduce and remove colors.
 
-## 3. EDA Key Points
+## 3. Diagnostic Results
 
-- The Kaggle run discovered 800 JSON files and loaded 400 normalized tasks, with full expected-style coverage from `task001` through `task400`.
-- The dataset is mostly low-shot: median training examples per task is 3, with a range from 2 to 10.
-- Most tasks have one test case, but some have multiple test cases, so submission code must not assume a single invocation forever.
-- Shape-changing tasks are substantial: 138 / 400 tasks show train-time input/output shape changes, while 262 / 400 are same-shape in the training examples.
-- Input grids can reach 30x30, so larger-grid tasks should be used as ONNX cost and memory stress tests.
-- Color token `0` dominates both train inputs and outputs, which makes background handling a central baseline concern.
-- The provisional EDA buckets are: 138 shape-changing, 108 larger same-shape, 85 small same-shape, and 69 low-color same-shape tasks.
-- The latest EDA and diagnostics review is summarized in `docs/eda-diagnostics-insights.md`.
+Strict simple solvers explain a useful but limited slice of the benchmark:
 
-## 4. Deep-Dive EDA Backlog
+- `62` tasks are compatible with at least one simple same-shape solver.
+- `50` tasks match a background-to-single-color pattern.
+- `5` tasks match a global color-map pattern.
+- Basic geometric transforms such as flips, rotations, and transpose cover only a handful of tasks.
+- Strict shape-changing heuristics currently explain `4` tasks: crop, integer scale, or periodic tiling.
 
-- Separate strong expansion/compression tasks from same-area tasks; these likely need different solver families.
-- Compare input/output color-set deltas to identify introduced-color, removed-color, and same-palette tasks.
-- Isolate multiple-test-case tasks early because they need input-conditioned models or exact transformation logic.
-- Add object-level diagnostics next: connected components by color, bounding boxes, symmetry, repetition, and grid-line detection.
-- Add train-pair consistency checks for simple solver hypotheses such as identity, color map, crop, tile, scale, transpose, mirror, and mask-fill.
-- Use `03_solver_diagnostics.ipynb` to turn these checks into measurable coverage tables before implementing each solver family.
+The broader modeling backlog is therefore object- and structure-heavy:
 
-## 5. Baseline Direction
+- `148` tasks: object movement or object selection
+- `101` tasks: crop, extract, or compress
+- `62` tasks: simple same-shape solver candidates
+- `52` tasks: pattern, counting, or global logic
+- `33` tasks: expand, tile, or construct
+- `4` tasks: simple shape solver candidates
 
-The first baseline is an ONNX packaging baseline. It writes the Kaggle-facing artifact to `/kaggle/working/submission.zip`, validates generated models with `onnxruntime` when available, and keeps a manifest of generated task models. Single-test tasks use constant-output models; structurally compatible multi-test tasks use an input-equality selector model. The baseline notebook includes the official starter-notebook dependency pins for Kaggle: `numpy==2.4.4`, `onnx==1.21.0`, `onnxruntime==1.24.4`, and `onnx-tool==1.0.1`. It should be followed by solver baselines that infer outputs from input grids rather than relying on public test outputs.
+Full notes are maintained in `docs/eda-diagnostics-insights.md`.
 
-## 6. Project Rules
+## 4. Baseline Status
 
-Notebook style and visualization conventions are documented in `docs/coding-rules.md`.
+The current baseline is primarily a submission-system validation baseline. It proves that the repository can generate a complete ONNX archive with one model per expected task.
+
+Current baseline behavior:
+
+- Single-test tasks use constant-output ONNX models.
+- Structurally compatible multi-test tasks use an input-equality selector model.
+- Unsupported tasks use a dynamic identity fallback so the archive remains complete.
+- The generated archive is `submission.zip`.
+- A manifest records which model strategy was used for each task.
+
+This baseline is not the final modeling strategy. Its purpose is to validate file naming, ONNX graph construction, runtime validation, archive completeness, and submission mechanics.
+
+## 5. Modeling Roadmap
+
+The next solver notebooks should prioritize train-fit coverage before ONNX optimization:
+
+1. Implement background-to-single-color and global color-map solvers.
+2. Add connected-component object extraction, movement, and selection solvers.
+3. Build crop, extract, and compression solvers for shape-changing tasks.
+4. Add expansion, tiling, and construction solvers.
+5. Investigate high-component tasks with pattern, counting, grid-line, and global-logic diagnostics.
+
+The intended progression is simple: measure coverage, implement narrow solvers, validate on training pairs, then export only the reliable solver families to ONNX.
