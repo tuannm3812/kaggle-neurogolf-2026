@@ -3,6 +3,7 @@
 ## 1. Notebook Style
 
 - Use a plain title as the first notebook heading.
+- Use simple numeric prefixes for ordered project artifacts, such as `1_eda.ipynb` and `2_eda_insights.md`; do not use zero-padded prefixes such as `01_`.
 - Group notebooks into a small number of numbered top-level chapters, such as `# 1. Setup and Data Loading`.
 - Use numbered subheadings inside each chapter, such as `## 1.1 Setup` and `## 1.2 Data Discovery`.
 - Avoid standalone heading-only Markdown cells. Each heading cell should include a short explanation of why the section exists.

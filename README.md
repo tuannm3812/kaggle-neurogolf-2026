@@ -4,9 +4,10 @@ This repository develops a structured solution path for the NeuroGolf 2026 compe
 
 ## 1. Current Workflow
 
-- `notebooks/01_eda.ipynb` builds the task inventory: coverage, train/test counts, grid geometry, color usage, shape changes, visual samples, and first-pass solver buckets.
-- `notebooks/02_baseline_models.ipynb` builds the ONNX packaging baseline and writes a complete `submission.zip` containing `task001.onnx` through `task400.onnx`.
-- `notebooks/03_solver_diagnostics.ipynb` measures strict simple-solver compatibility, connected-component complexity, shape-change behavior, palette deltas, and recommended solver tracks.
+- `docs/1_instructions.md` defines the competition overview, core questions, tasks, approach, current results, and next work.
+- `notebooks/1_eda.ipynb` builds the task inventory: coverage, train/test counts, grid geometry, color usage, shape changes, visual samples, and first-pass solver buckets.
+- `notebooks/2_baseline_models.ipynb` builds the ONNX packaging baseline and writes a complete `submission.zip` containing `task001.onnx` through `task400.onnx`.
+- `notebooks/3_solver_diagnostics.ipynb` measures strict simple-solver compatibility, connected-component complexity, shape-change behavior, palette deltas, and recommended solver tracks.
 
 ## 2. Key Findings
 
@@ -36,7 +37,7 @@ The broader modeling backlog is therefore object- and structure-heavy:
 - `33` tasks: expand, tile, or construct
 - `4` tasks: simple shape solver candidates
 
-Full notes are maintained in `docs/eda-diagnostics-insights.md`.
+Full EDA notes are maintained in `docs/2_eda_insights.md`.
 
 ## 4. Baseline Status
 
@@ -51,6 +52,8 @@ Current baseline behavior:
 - A manifest records which model strategy was used for each task.
 
 This baseline is not the final modeling strategy. Its purpose is to validate file naming, ONNX graph construction, runtime validation, archive completeness, and submission mechanics.
+
+Detailed baseline notes are maintained in `docs/3_baseline_models.md`.
 
 ## 5. Modeling Roadmap
 
