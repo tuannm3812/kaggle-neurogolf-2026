@@ -202,6 +202,7 @@ Expected output:
 - `neurogolf_solver_candidate_table.csv`
 - `neurogolf_same_shape_solver_fits.csv`
 - `neurogolf_shape_solver_fits.csv`
+- `neurogolf_solver_development_artifacts.zip`
 
 Recommended first solver targets:
 

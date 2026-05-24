@@ -147,8 +147,11 @@ For each solver family, report:
 Immediate implementation target:
 
 - Use the fourth notebook to generate `neurogolf_solver_candidate_table.csv`.
+- Download `neurogolf_solver_development_artifacts.zip` from Kaggle when sharing candidate tables outside the notebook run.
 - Export background-to-single-color and global color-map task ids into the first real ONNX solver notebook.
 - Keep the complete constant/fallback archive path as the fallback for tasks without a reliable train-fit solver.
+
+Latest candidate-table routing shows the first export slice is narrow: `62` simple same-shape tasks and `4` simple shape-changing tasks. The larger unsolved queues are still object movement/selection (`158`) and crop/extract/compress (`99`).
 
 ## 6. Success Criteria for the Next Modeling Step
 

@@ -188,7 +188,17 @@ Current next-step artifact:
 
 - `notebooks/4_solver_development.ipynb` creates train-fit candidate tables for simple same-shape and shape-changing solvers.
 - It exports `neurogolf_solver_candidate_table.csv`, `neurogolf_same_shape_solver_fits.csv`, and `neurogolf_shape_solver_fits.csv`.
+- It also writes `neurogolf_solver_development_artifacts.zip` so the candidate tables can be downloaded from Kaggle as one bundle.
 - The following notebook after that should export the highest-confidence simple same-shape solvers to ONNX, starting with background-to-single-color and global color-map candidates.
+
+Latest solver-development routing:
+
+- `158` tasks: deep dive object movement/selection
+- `99` tasks: deep dive crop/extract/compress
+- `62` tasks: export simple same-shape solver
+- `45` tasks: deep dive pattern/counting/global logic
+- `32` tasks: deep dive expand/tile/construct
+- `4` tasks: export simple shape solver
 
 ## 10. Report Figures
 
@@ -207,6 +217,8 @@ Generated figures:
 - `9_difficult_largest_grid.png`: largest-grid stress task.
 - `10_difficult_rich_palette.png`: richest-palette stress task.
 - `11_difficult_multi_test.png`: multi-test task sample when available.
+
+The EDA notebook also includes an inline difficult-task gallery in the task-review section. It renders representative stress cases for strong expansion, strong compression, large grids, rich palettes, multi-test behavior, and mixed palette changes before the modeling-planning section.
 
 Generated markdown:
 

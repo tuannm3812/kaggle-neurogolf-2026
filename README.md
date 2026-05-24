@@ -1,5 +1,14 @@
 # NeuroGolf 2026
 
+<img src="https://kaggle.com/competitions/116438/images/header" alt="NeuroGolf 2026 competition banner" width="100%">
+
+<p>
+  <img alt="Kaggle" src="https://img.shields.io/badge/Kaggle-NeuroGolf_2026-20BEFF?style=flat-square&logo=kaggle&logoColor=white">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white">
+  <img alt="ONNX" src="https://img.shields.io/badge/ONNX-submission-005CED?style=flat-square">
+  <img alt="Workflow" src="https://img.shields.io/badge/workflow-notebook--first-2E7D32?style=flat-square">
+</p>
+
 This repository develops a structured solution path for the NeuroGolf 2026 competition. The current work focuses on understanding the ARC-style task distribution, measuring simple solver opportunities, and building a reliable ONNX submission pipeline before investing in higher-complexity solvers.
 
 ## 1. Current Workflow
@@ -38,6 +47,8 @@ The broader modeling backlog is therefore object- and structure-heavy:
 - `52` tasks: pattern, counting, or global logic
 - `33` tasks: expand, tile, or construct
 - `4` tasks: simple shape solver candidates
+
+The solver-development candidate table routes the same benchmark into a slightly different implementation queue: `158` object movement/selection tasks, `99` crop/extract/compress tasks, `62` simple same-shape exports, `45` pattern/counting/global-logic tasks, `32` expand/tile/construct tasks, and `4` simple shape exports.
 
 Full EDA notes are maintained in `docs/2_eda_insights.md`.
 
