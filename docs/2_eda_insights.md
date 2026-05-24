@@ -218,7 +218,51 @@ Generated figures:
 - `10_difficult_rich_palette.png`: richest-palette stress task.
 - `11_difficult_multi_test.png`: multi-test task sample when available.
 
+Selected EDA figures from the latest run:
+
+![Pair distributions](figures/eda/1_pair_distributions.png)
+
+![Grid geometry](figures/eda/2_grid_geometry.png)
+
+![Color frequency](figures/eda/3_color_frequency.png)
+
+![Palette relation](figures/eda/5_palette_relation.png)
+
 The EDA notebook also includes an inline difficult-task gallery in the task-review section. It renders representative stress cases for strong expansion, strong compression, large grids, rich palettes, multi-test behavior, and mixed palette changes before the modeling-planning section.
+
+Latest difficult-task gallery:
+
+- `task398`: strong expansion stress case.
+- `task355`: strong compression stress case.
+- `task054`: largest-grid stress case.
+- `task022`: rich-palette stress case.
+- `task399`: multi-test stress case.
+- `task003`: mixed-palette stress case.
+
+Latest difficult-task renders:
+
+![Task 398 strong expansion](figures/eda/7_difficult_task398_strong_expansion.png)
+
+![Task 355 strong compression](figures/eda/8_difficult_task355_strong_compression.png)
+
+![Task 054 largest grid](figures/eda/9_difficult_task054_largest_grid.png)
+
+![Task 022 rich palette](figures/eda/10_difficult_task022_rich_palette.png)
+
+![Task 399 multi-test](figures/eda/11_difficult_task399_multi_test.png)
+
+![Task 003 mixed palette](figures/eda/12_difficult_task003_mixed_palette.png)
+
+Modeling implication:
+
+- `task398` and `task355` should anchor shape-changing solver design because they represent the strongest area-ratio extremes.
+- `task054` should be used as an ONNX-size and runtime stress check before exporting any dense grid operation.
+- `task399` should remain in the multi-test validation set because it exposes whether a model truly branches on input.
+- `task003` is a good early mixed-palette example because it combines shape change with color replacement.
+
+Solver planning view:
+
+![Solver planning buckets](figures/eda/13_solver_planning_buckets.png)
 
 Generated markdown:
 
