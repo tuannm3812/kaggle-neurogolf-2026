@@ -7,7 +7,7 @@
 - Group notebooks into a small number of numbered top-level chapters, such as `# 1. Setup and Data Loading`.
 - Use numbered subheadings inside each chapter, such as `## 1.1 Setup` and `## 1.2 Data Discovery`.
 - Avoid standalone heading-only Markdown cells. Each heading cell should include a short explanation of why the section exists.
-- Add concise Markdown or generated Markdown insight blocks after analytical code cells.
+- Add concise Markdown insight cells after analytical code cells. Keep analysis prose out of code cells unless the text is generated as an explicit report artifact.
 - Clear notebook outputs and execution counts only when notebook code changes. Do not clear outputs for documentation-only, review-only, or insight-summary changes.
 
 ## 2. Visualization Style
