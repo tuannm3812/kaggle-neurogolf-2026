@@ -8,6 +8,7 @@ This repository develops a structured solution path for the NeuroGolf 2026 compe
 - `notebooks/1_eda.ipynb` builds the task inventory: coverage, train/test counts, grid geometry, color usage, shape changes, visual samples, and first-pass solver buckets.
 - `notebooks/2_baseline_models.ipynb` builds the ONNX packaging baseline and writes a complete `submission.zip` containing `task001.onnx` through `task400.onnx`.
 - `notebooks/3_solver_diagnostics.ipynb` measures strict simple-solver compatibility, connected-component complexity, shape-change behavior, palette deltas, and recommended solver tracks.
+- `notebooks/4_solver_development.ipynb` starts the real solver workflow by creating train-fit candidate tables for simple same-shape and shape-changing rules.
 
 ## 2. Key Findings
 
@@ -27,6 +28,7 @@ Strict simple solvers explain a useful but limited slice of the benchmark:
 - `5` tasks match a global color-map pattern.
 - Basic geometric transforms such as flips, rotations, and transpose cover only a handful of tasks.
 - Strict shape-changing heuristics currently explain `4` tasks: crop, integer scale, or periodic tiling.
+- Together, strict simple rules cover only `66` solver candidates before overlap checks and ONNX export, so most improvement must come from object and construction logic.
 
 The broader modeling backlog is therefore object- and structure-heavy:
 
@@ -57,7 +59,7 @@ Detailed baseline notes are maintained in `docs/3_baseline_models.md`.
 
 ## 5. Modeling Roadmap
 
-The next solver notebooks should prioritize train-fit coverage before ONNX optimization:
+The next solver notebooks should prioritize train-fit coverage before ONNX optimization. The fourth notebook now creates the candidate table that should drive implementation order:
 
 1. Implement background-to-single-color and global color-map solvers.
 2. Add connected-component object extraction, movement, and selection solvers.

@@ -84,6 +84,10 @@ Primary notebook:
 
 - `notebooks/3_solver_diagnostics.ipynb`
 
+Next-step notebook:
+
+- `notebooks/4_solver_development.ipynb`
+
 ### 3.3 Baseline Modeling Tasks
 
 - Generate one ONNX file per expected task.
@@ -135,7 +139,7 @@ Output:
 
 ### 4.3 Stage 3: Implement Real Solver Families
 
-Next, we move from public-output baselines to input-derived solvers. The solver should fit all train pairs before it is exported to ONNX.
+Next, we move from public-output baselines to input-derived solvers. The solver should fit all train pairs before it is exported to ONNX. The first solver-development notebook now builds candidate tables for strict same-shape and shape-changing rules, then routes the remaining tasks into deeper object, compression, expansion, and pattern-analysis tracks.
 
 Initial solver family order:
 
@@ -162,6 +166,7 @@ Current EDA and diagnostics results:
 - `262 / 400` tasks are same-area.
 - Strict same-shape solver diagnostics cover `62` tasks.
 - Strict shape-changing heuristics cover `4` tasks.
+- Strict simple solvers therefore explain only a small first slice of the benchmark; the dominant unsolved tracks remain object movement/selection and crop/extract/compress.
 - Recommended largest solver tracks are object movement/selection and crop/extract/compress.
 
 Current baseline results:
@@ -191,6 +196,12 @@ The next implementation step should be a solver-development notebook, not more b
 Recommended next notebook:
 
 - `notebooks/4_solver_development.ipynb`
+
+Expected output:
+
+- `neurogolf_solver_candidate_table.csv`
+- `neurogolf_same_shape_solver_fits.csv`
+- `neurogolf_shape_solver_fits.csv`
 
 Recommended first solver targets:
 

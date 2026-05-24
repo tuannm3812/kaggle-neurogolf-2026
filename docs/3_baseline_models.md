@@ -125,7 +125,7 @@ Known modeling gaps:
 
 ## 5. Next Baseline Experiments
 
-The next baseline notebooks should move from packaging validation to real solver families.
+The next baseline notebooks should move from packaging validation to real solver families. `notebooks/4_solver_development.ipynb` is the bridge: it builds exact train-fit candidate tables before any solver is exported to ONNX.
 
 Recommended order:
 
@@ -143,6 +143,12 @@ For each solver family, report:
 - failure examples;
 - whether the rule can be exported to ONNX;
 - public benchmark validation result where available.
+
+Immediate implementation target:
+
+- Use the fourth notebook to generate `neurogolf_solver_candidate_table.csv`.
+- Export background-to-single-color and global color-map task ids into the first real ONNX solver notebook.
+- Keep the complete constant/fallback archive path as the fallback for tasks without a reliable train-fit solver.
 
 ## 6. Success Criteria for the Next Modeling Step
 

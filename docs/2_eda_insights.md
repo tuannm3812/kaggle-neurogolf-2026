@@ -10,6 +10,7 @@ This note summarizes what the current EDA and solver-diagnostics notebooks tell 
 - Same-area tasks are still the majority: `262 / 400` tasks preserve approximate area.
 - Color `0` dominates input and output cells, so background handling should be a core primitive.
 - Strict simple solvers explain only a limited slice of the benchmark: `62` tasks for same-shape rules and `4` tasks for simple shape-changing heuristics.
+- The strict solver slice is useful for first exports, but it leaves most tasks for object-level, crop/extract, construction, and pattern logic.
 - The next modeling work should focus on object extraction, object movement/selection, crop/compress logic, and construction rules rather than broad learned models.
 
 ## 2. Data Health
@@ -173,7 +174,7 @@ Recommended implementation order:
 
 ## 9. Do We Need More Deep-Dive Analysis?
 
-Yes, but it should be targeted rather than broad. The current EDA is enough to reject a purely generic modeling approach and enough to define the first solver families. The next deep dives should be solver-enabling:
+Yes, but it should be targeted rather than broad. The current EDA is enough to reject a purely generic modeling approach and enough to define the first solver families. The next notebook should first produce a solver candidate table, then use that table to decide which deep dives are worth doing. The next deep dives should be solver-enabling:
 
 - For the `62` simple same-shape candidates, export exact task ids and expected solver family.
 - For the `101` crop/extract/compress candidates, classify whether output is object crop, bbox crop, fixed template, count summary, or selected object.
@@ -182,6 +183,12 @@ Yes, but it should be targeted rather than broad. The current EDA is enough to r
 - For the `52` pattern/counting/global-logic candidates, add grid-line, region-count, repetition, and symmetry diagnostics.
 
 The immediate next notebook should therefore be solver-development oriented, not more descriptive EDA.
+
+Current next-step artifact:
+
+- `notebooks/4_solver_development.ipynb` creates train-fit candidate tables for simple same-shape and shape-changing solvers.
+- It exports `neurogolf_solver_candidate_table.csv`, `neurogolf_same_shape_solver_fits.csv`, and `neurogolf_shape_solver_fits.csv`.
+- The following notebook after that should export the highest-confidence simple same-shape solvers to ONNX, starting with background-to-single-color and global color-map candidates.
 
 ## 10. Report Figures
 
