@@ -200,81 +200,146 @@ Latest solver-development routing:
 - `32` tasks: deep dive expand/tile/construct
 - `4` tasks: export simple shape solver
 
-## 10. Report Figures
+## 10. Visual Evidence and Figure Insights
 
-The EDA notebook now generates a small report asset pack under `eda_report_figures` when it runs. The generated files are designed to be copied directly into notes, README updates, or Kaggle writeups.
+The EDA figures are included here as evidence for modeling decisions. The goal is not to list every generated file; it is to connect each visual to a solver implication.
 
-Generated figures:
-
-- `1_pair_distributions.png`: train/test example counts.
-- `2_grid_geometry.png`: input/output area and shape-change overview.
-- `3_color_frequency.png`: ARC color-token frequency.
-- `4_area_groups.png`: compression, same-area, and expansion groups.
-- `5_palette_relation.png`: same-palette, introduced-color, removed-color, and mixed palette tasks.
-- `6_sample_task.png`: rendered representative task sample from the diverse visual-review set.
-- `7_difficult_strong_expansion.png`: hardest sampled strong-expansion task.
-- `8_difficult_strong_compression.png`: hardest sampled strong-compression task.
-- `9_difficult_largest_grid.png`: largest-grid stress task.
-- `10_difficult_rich_palette.png`: richest-palette stress task.
-- `11_difficult_multi_test.png`: multi-test task sample when available.
-
-Selected EDA figures from the latest run:
+### 10.1 Pair Distributions
 
 ![Pair distributions](figures/eda/1_pair_distributions.png)
 
+Insight:
+
+- Most tasks are low-shot, with the median task providing only `3` training examples.
+- `386 / 400` tasks have one test case, but the `14` multi-test tasks are disproportionately important for submission robustness.
+- Modeling implication: prioritize rule induction and train-fit checks over statistical fitting, and keep multi-test tasks in every validation pass.
+
+### 10.2 Grid Geometry
+
 ![Grid geometry](figures/eda/2_grid_geometry.png)
+
+Insight:
+
+- The benchmark splits into a same-shape majority and a substantial shape-changing minority.
+- `138 / 400` tasks change shape in training pairs, so dynamic output construction cannot be treated as an edge case.
+- Modeling implication: maintain separate solver tracks for same-shape transformations, compression/extraction, and expansion/construction.
+
+### 10.3 Color Frequency
 
 ![Color frequency](figures/eda/3_color_frequency.png)
 
+Insight:
+
+- Color `0` dominates both train inputs and outputs.
+- Background logic should be explicit rather than incidental, but task-specific checks are still needed because removing or introducing color `0` can itself be part of the rule.
+- Modeling implication: background detection, masking, fill operations, and object extraction should be first-class primitives in solver code.
+
+### 10.4 Palette Relation
+
 ![Palette relation](figures/eda/5_palette_relation.png)
 
-The EDA notebook also includes an inline difficult-task gallery in the task-review section. It renders representative stress cases for strong expansion, strong compression, large grids, rich palettes, multi-test behavior, and mixed palette changes before the modeling-planning section.
+Insight:
 
-Latest difficult-task gallery:
+- `176` tasks keep the same palette, but `224` tasks alter the palette in some way.
+- Introduced and removed colors indicate that many transformations are semantic, not only geometric.
+- Modeling implication: separate pure geometry solvers from recoloring, marking, filtering, and label-generation solvers.
 
-- `task398`: strong expansion stress case.
-- `task355`: strong compression stress case.
-- `task054`: largest-grid stress case.
-- `task022`: rich-palette stress case.
-- `task399`: multi-test stress case.
-- `task003`: mixed-palette stress case.
+### 10.5 Difficult Task Gallery
 
-Latest difficult-task renders:
+The difficult-task gallery selects concrete stress examples from the latest EDA run.
 
 ![Task 398 strong expansion](figures/eda/7_difficult_task398_strong_expansion.png)
 
+Insight:
+
+- `task398` is the strongest expansion sample and should anchor expand/tile/construct solver design.
+- Modeling implication: expansion solvers need to infer output size and repeated structure, not just recolor or copy cells.
+
 ![Task 355 strong compression](figures/eda/8_difficult_task355_strong_compression.png)
+
+Insight:
+
+- `task355` is an extreme compression sample, with output collapsing to a tiny target grid.
+- Modeling implication: compression solvers need object selection, summarization, counting, or canonicalization logic beyond simple crop-to-bounding-box.
 
 ![Task 054 largest grid](figures/eda/9_difficult_task054_largest_grid.png)
 
+Insight:
+
+- `task054` is a largest-grid stress case.
+- Modeling implication: dense ONNX operations should be checked against this kind of task before being adopted broadly, because size and runtime can become limiting even when the rule is simple.
+
 ![Task 022 rich palette](figures/eda/10_difficult_task022_rich_palette.png)
+
+Insight:
+
+- `task022` stresses color handling and palette-rich visual parsing.
+- Modeling implication: object grouping by color and palette-aware comparisons are needed before moving into more complex object selection.
 
 ![Task 399 multi-test](figures/eda/11_difficult_task399_multi_test.png)
 
+Insight:
+
+- `task399` is a multi-test stress case.
+- Modeling implication: it should stay in the validation set for any ONNX solver that branches on input, because constant-output shortcuts can hide failures on single-test tasks.
+
 ![Task 003 mixed palette](figures/eda/12_difficult_task003_mixed_palette.png)
 
-Modeling implication:
+Insight:
 
-- `task398` and `task355` should anchor shape-changing solver design because they represent the strongest area-ratio extremes.
-- `task054` should be used as an ONNX-size and runtime stress check before exporting any dense grid operation.
-- `task399` should remain in the multi-test validation set because it exposes whether a model truly branches on input.
-- `task003` is a good early mixed-palette example because it combines shape change with color replacement.
+- `task003` combines shape change with color replacement.
+- Modeling implication: early solvers should not assume that shape-change and palette-change families are independent.
 
-Solver planning view:
+### 10.6 Solver Planning Buckets
 
 ![Solver planning buckets](figures/eda/13_solver_planning_buckets.png)
 
-Generated markdown:
+Insight:
 
-- `eda-insights-with-figures.md`: a markdown fragment with captions and image links.
-- `eda_figure_manifest.csv`: a machine-readable manifest of figure titles, paths, and captions.
+- The broad EDA buckets confirm that the next phase should be solver-specific rather than more descriptive EDA.
+- The largest broad bucket is shape-changing, followed by larger same-shape tasks that likely need object or pattern reasoning.
+- Modeling implication: implement narrow train-fit solvers first, then use failure buckets to decide where deeper object diagnostics are necessary.
 
-These plots are not just presentation artifacts. They should be used as a review checklist before implementing new solver families:
+## 11. Solver Development Output Insights
 
-- Pair distributions confirm whether a solver can rely on multiple train examples.
-- Grid geometry identifies where dynamic output shape is required.
-- Color frequency keeps background logic visible.
-- Area groups separate crop/compress solvers from expand/construct solvers.
-- Palette relation separates geometry tasks from color-introduction tasks.
-- Sample task renders keep the modeling discussion grounded in actual ARC examples.
-- Difficult task renders make the next solver backlog concrete: expansion, compression, large-grid, rich-palette, and multi-test failure modes should each be inspected before implementing solvers.
+The downloaded `neurogolf_solver_development_artifacts.zip` contains the three expected files:
+
+- `neurogolf_solver_candidate_table.csv`
+- `neurogolf_same_shape_solver_fits.csv`
+- `neurogolf_shape_solver_fits.csv`
+
+Candidate-table coverage is complete: `400` rows and `27` columns.
+
+Latest candidate routing:
+
+- `158` tasks: deep dive object movement/selection
+- `99` tasks: deep dive crop/extract/compress
+- `62` tasks: export simple same-shape solver
+- `45` tasks: deep dive pattern/counting/global logic
+- `32` tasks: deep dive expand/tile/construct
+- `4` tasks: export simple shape solver
+
+Immediate export candidates:
+
+- `50` tasks fit `background_to_single_color`.
+- `5` tasks fit `global_color_map`: `task016`, `task267`, `task276`, `task309`, `task337`.
+- `4` tasks fit simple shape-changing solvers: `task031`, `task223`, `task249`, `task307`.
+
+Deep-dive implications:
+
+- Object movement/selection is the largest queue at `158` tasks, with median `4` max components and max `10`; this is the best next analysis target after simple solver export.
+- Crop/extract/compress has `99` tasks and median area ratio `0.15`; this queue likely mixes object extraction, summary outputs, and selected-object canonicalization.
+- Pattern/counting/global logic has only `45` tasks but much higher component complexity, with median `17` max components and maximum `782`; these should be deferred until simpler object and compression tracks are measured.
+- Expand/tile/construct has `32` tasks with median area ratio `4.0`; this track needs output-size inference and construction rules.
+
+Readiness assessment:
+
+- Yes, we have enough information to move to the next step.
+- The next notebook should export real ONNX solvers for the safest simple same-shape candidates first: full-background-fill and global color-map models. Geometric transforms should follow once the first solver archive is validated.
+- In parallel, the next diagnostic deep dive should focus on object movement/selection because it is the largest unsolved queue and still has manageable component counts.
+
+Next notebook:
+
+- `notebooks/5_simple_solver_export.ipynb` exports the first input-derived ONNX solver families.
+- It starts with the safer exportable subset of same-shape rules: full-background-fill and global color-map models.
+- It preserves a complete `submission.zip` by keeping fallback models for tasks not yet solved by input-derived rules.

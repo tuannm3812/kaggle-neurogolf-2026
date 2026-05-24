@@ -204,9 +204,13 @@ Expected output:
 - `neurogolf_shape_solver_fits.csv`
 - `neurogolf_solver_development_artifacts.zip`
 
+Primary export notebook:
+
+- `notebooks/5_simple_solver_export.ipynb`
+
 Recommended first solver targets:
 
-- background-to-single-color tasks;
+- full-background-fill tasks;
 - global color-map tasks;
 - low-component object selection tasks;
 - crop/extract/compress tasks with clear bounding-box behavior.
@@ -243,6 +247,12 @@ Expected result:
 - exact task ids solved on all train pairs;
 - failure examples for near misses;
 - ONNX export feasibility per solver.
+
+Expected artifact:
+
+- `submission.zip`
+- `simple_solver_manifest.csv`
+- `simple_solver_validation.csv`
 
 ### 8.3 Implement Object-Level Solvers
 

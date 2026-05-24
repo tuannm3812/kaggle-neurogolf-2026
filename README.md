@@ -18,6 +18,7 @@ This repository develops a structured solution path for the NeuroGolf 2026 compe
 - `notebooks/2_baseline_models.ipynb` builds the ONNX packaging baseline and writes a complete `submission.zip` containing `task001.onnx` through `task400.onnx`.
 - `notebooks/3_solver_diagnostics.ipynb` measures strict simple-solver compatibility, connected-component complexity, shape-change behavior, palette deltas, and recommended solver tracks.
 - `notebooks/4_solver_development.ipynb` starts the real solver workflow by creating train-fit candidate tables for simple same-shape and shape-changing rules.
+- `notebooks/5_simple_solver_export.ipynb` exports the first input-derived ONNX solvers and keeps fallback models for complete archive coverage.
 
 ## 2. Key Findings
 
@@ -79,3 +80,5 @@ The next solver notebooks should prioritize train-fit coverage before ONNX optim
 5. Investigate high-component tasks with pattern, counting, grid-line, and global-logic diagnostics.
 
 The intended progression is simple: measure coverage, implement narrow solvers, validate on training pairs, then export only the reliable solver families to ONNX.
+
+The next Kaggle run should execute `notebooks/5_simple_solver_export.ipynb` after notebook 4. Its first target is the safest same-shape export slice: full-background-fill and global-color-map models.
