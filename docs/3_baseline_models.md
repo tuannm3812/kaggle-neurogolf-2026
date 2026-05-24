@@ -155,6 +155,23 @@ Latest candidate-table routing shows the first export slice is narrow: `62` simp
 
 The first export notebook is `notebooks/5_simple_solver_export.ipynb`. It turns the safest same-shape candidates into input-derived ONNX graphs and keeps constant fallbacks for all unsupported tasks so the archive remains complete.
 
+Latest simple-solver export run:
+
+- `400` ONNX files generated.
+- `submission.zip` contains `400 / 400` expected files.
+- `395` tasks used constant fallback models.
+- `5` tasks used global color-map models.
+- Runtime validation checked `416` task/test-case rows.
+- `399 / 416` rows matched expected outputs.
+- `17 / 416` rows failed: `16` fallback rows and `1` global color-map row.
+- The failed global color-map task was `task267`.
+
+Interpretation:
+
+- The first real solver export is structurally valid, but it is not yet stronger than the packaging baseline.
+- Train-fit global color maps can still fail on public test inputs, so global-color-map export should require an additional test-structure or public-validation gate before being used in a scoring submission.
+- The next improvement should add a stricter solver acceptance policy: keep a train-fit solver only when runtime validation passes; otherwise fall back to the packaging model for that task.
+
 ## 6. Success Criteria for the Next Modeling Step
 
 A real baseline solver should be considered useful only if it:

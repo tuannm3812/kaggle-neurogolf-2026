@@ -1,6 +1,6 @@
 # NeuroGolf 2026
 
-<img src="https://kaggle.com/competitions/116438/images/header" alt="NeuroGolf 2026 competition banner" width="100%">
+<img src="docs/assets/neurogolf-2026-header.png" alt="NeuroGolf 2026 competition banner" width="100%">
 
 <p>
   <img alt="Kaggle" src="https://img.shields.io/badge/Kaggle-NeuroGolf_2026-20BEFF?style=flat-square&logo=kaggle&logoColor=white">
