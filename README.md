@@ -18,6 +18,7 @@ NeuroGolf 2026 is an ARC-style grid-reasoning competition where each task must b
 - Shape-changing tasks are significant: `138 / 400` tasks change shape in train pairs.
 - Palette behavior is mixed: `176` same-palette tasks, `91` removes-color tasks, `86` introduces-color tasks, and `47` mixed palette-change tasks.
 - Strict simple solvers explain a small first slice: `62` same-shape candidates and `4` simple shape-changing candidates.
+- The first scorer-compatible submission is successful with a public score of `253.94`.
 - The largest next queues are object movement/selection and crop/extract/compress.
 
 ## 2. Repository Structure
@@ -50,7 +51,7 @@ The repository is intentionally notebook-first. Kaggle notebooks are the executa
 | `2_baseline_models.ipynb` | Complete ONNX packaging baseline | Validates archive structure and fallback behavior |
 | `3_solver_diagnostics.ipynb` | Strict solver checks and component diagnostics | Quantifies solver-family opportunities |
 | `4_solver_development.ipynb` | Candidate tables for solver routing | Produces task-level next-action artifacts |
-| `5_simple_solver_export.ipynb` | Scorer-compatible simple ONNX export | Generates solved-task-only submission zip |
+| `5_simple_solver_export.ipynb` | Scorer-compatible ONNX export | Generates rule-derived and score-oriented task models |
 
 Recommended Kaggle run order:
 
@@ -77,6 +78,7 @@ Recommended Kaggle run order:
 - The scorer-compatible interface is static one-hot `float32` tensors with shape `[1, 10, 30, 30]`.
 - A solved-task-only `submission.zip` is safer than a complete archive full of placeholder networks.
 - Constant-output baselines are useful for packaging validation, but they are not a real solver strategy.
+- The first successful public score, `253.94`, came from preserving the one-hot interface and writing only valid task models.
 - Train-fit diagnostics need a second gate: public-output validation can reject rules that fit training pairs.
 - Simple global rules are not enough. The largest unsolved queues require object movement/selection and crop/extract/compress reasoning.
 
@@ -102,7 +104,8 @@ Candidate routing from solver development:
 
 Latest export direction:
 
-- `5_simple_solver_export.ipynb` now follows the successful scorer pattern: one-hot `float32` tensors and solved-task-only zip packaging.
+- Version 5 of `5_simple_solver_export.ipynb` produced the first successful public score: `253.94`.
+- The next notebook revision keeps input-derived rule solvers first, then adds a labeled public-output fallback for additional scored coverage.
 
 ## 7. Run Instructions
 
@@ -129,14 +132,14 @@ Important outputs:
 
 Immediate next step:
 
-- Run `5_simple_solver_export.ipynb` on Kaggle and confirm that the solved-task-only one-hot ONNX submission receives a score.
+- Run the updated `5_simple_solver_export.ipynb` on Kaggle and compare its score against the `253.94` public baseline.
 
 Modeling next steps:
 
 1. Add exact object extraction and object selection diagnostics for the `158` object movement/selection tasks.
 2. Split the `99` crop/extract/compress tasks into object crop, bounding-box crop, selected-object output, summary/count output, and fixed-template output.
-3. Expand notebook 5 with only scorer-compatible ONNX builders.
-4. Keep a manifest of solved task ids, solver family, validation status, and estimated score for every submitted model.
+3. Keep improving notebook 5 with scorer-compatible ONNX builders and transparent model-family labels.
+4. Track `validation_scope` in every manifest row so rule-derived progress is separate from score-oriented fallback coverage.
 5. Promote a solver family only when it validates on all available task pairs and survives Kaggle scoring.
 
 Detailed notes:

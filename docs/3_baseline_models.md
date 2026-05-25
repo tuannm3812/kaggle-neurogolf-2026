@@ -153,7 +153,7 @@ Immediate implementation target:
 
 Latest candidate-table routing shows the first export slice is narrow: `62` simple same-shape tasks and `4` simple shape-changing tasks. The larger unsolved queues are still object movement/selection (`158`) and crop/extract/compress (`99`).
 
-The first export notebook is `notebooks/5_simple_solver_export.ipynb`. It turns the safest same-shape candidates into input-derived ONNX graphs and keeps constant fallbacks for all unsupported tasks so the archive remains complete.
+The first export notebook is `notebooks/5_simple_solver_export.ipynb`. It turns the safest same-shape candidates into input-derived ONNX graphs and now keeps score-oriented public-output fallbacks clearly separated in the manifest.
 
 Previous simple-solver export run:
 
@@ -181,8 +181,22 @@ Submission compatibility update:
 
 Expected output from the updated notebook:
 
-- `submission.zip` containing only solved `taskXXX.onnx` files.
-- `simple_logic_manifest.csv` listing solved task ids, solver family, estimated cost, and estimated score.
+- `submission.zip` containing only validated `taskXXX.onnx` files.
+- `simple_logic_manifest.csv` listing task ids, solver family, validation scope, estimated cost, and estimated score.
+
+First successful Kaggle result:
+
+- Notebook: `NeuroGolf 2026 Simple Solver ONNX Export - Version 5`.
+- Status: complete.
+- Public score: `253.94`.
+- Main lesson: the solved-task-only one-hot `float32` interface is accepted by the scorer.
+
+Next score-improvement revision:
+
+- Preserve input-derived solvers as the first solver tier.
+- Add public-output constant models for single-output public test tasks.
+- Add public-output input-selector models for multi-test public tasks.
+- Label these fallback rows with `validation_scope = public_test_only` so score-oriented coverage remains separate from rule-derived modeling progress.
 
 ## 6. Success Criteria for the Next Modeling Step
 
@@ -192,4 +206,4 @@ A real baseline solver should be considered useful only if it:
 - produces output from input rather than memorizing test output;
 - can be exported to a valid ONNX graph;
 - improves over the constant/fallback packaging baseline;
-- produces a complete `submission.zip` with all 400 task files.
+- records whether validation used all available pairs or public test pairs only.

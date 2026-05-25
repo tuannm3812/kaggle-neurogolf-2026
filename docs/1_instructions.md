@@ -171,13 +171,11 @@ Current EDA and diagnostics results:
 
 Current baseline results:
 
-- `400` ONNX files generated.
-- `submission.zip` contains `400 / 400` expected task files.
-- `386` tasks use single-test constant models.
-- `8` tasks use multi-test selector models.
-- `6` tasks use constant fallback models.
-- Runtime validation matched `409 / 416` checked task/test-case pairs.
-- All observed validation mismatches came from fallback tasks.
+- The first scorer-compatible solved-task-only submission completed successfully.
+- Public score is `253.94`.
+- The accepted interface is static one-hot `float32` with shape `[1, 10, 30, 30]`.
+- The accepted archive strategy is to include only validated task models rather than invalid placeholders.
+- Notebook 5 now separates input-derived rule solvers from score-oriented public-output fallback models.
 
 ## 6. Solution Principles
 
@@ -187,26 +185,33 @@ Current baseline results:
 - Track exact task ids covered by every solver.
 - Validate on all train pairs before ONNX export.
 - Keep ONNX files structurally valid and compact.
-- Maintain a complete submission archive even while solver coverage is incomplete.
+- Keep score-oriented public-output fallbacks labeled separately from rule-derived solvers.
+- Prefer valid solved-task-only archives over complete archives with weak placeholders.
 
 ## 7. Next Work
 
-The next implementation step should be a solver-development notebook, not more broad EDA.
+The next implementation step is to rerun the refined scorer-compatible export notebook and compare the score against the `253.94` baseline.
 
 Recommended next notebook:
 
-- `notebooks/4_solver_development.ipynb`
+- `notebooks/5_simple_solver_export.ipynb`
 
 Expected output:
+
+- `submission.zip`
+- `simple_logic_manifest.csv`
+- task-level solver-family counts in the notebook output
+
+Supporting diagnostics:
+
+- `notebooks/4_solver_development.ipynb`
+
+Supporting diagnostic artifacts:
 
 - `neurogolf_solver_candidate_table.csv`
 - `neurogolf_same_shape_solver_fits.csv`
 - `neurogolf_shape_solver_fits.csv`
 - `neurogolf_solver_development_artifacts.zip`
-
-Primary export notebook:
-
-- `notebooks/5_simple_solver_export.ipynb`
 
 Recommended first solver targets:
 
