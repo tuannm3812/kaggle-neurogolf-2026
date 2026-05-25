@@ -9,76 +9,138 @@
   <img alt="Workflow" src="https://img.shields.io/badge/workflow-notebook--first-2E7D32?style=flat-square">
 </p>
 
-This repository develops a structured solution path for the NeuroGolf 2026 competition. The current work focuses on understanding the ARC-style task distribution, measuring simple solver opportunities, and building a reliable ONNX submission pipeline before investing in higher-complexity solvers.
+NeuroGolf 2026 is an ARC-style grid-reasoning competition where each task must be solved by an ONNX model. This repository documents a notebook-first solution workflow: explore the task distribution, measure solver opportunities, build a valid ONNX packaging baseline, then move toward evaluator-compatible input-derived solvers.
 
-## 1. Current Workflow
+## 1. Project Snapshot
 
-- `docs/1_instructions.md` defines the competition overview, core questions, tasks, approach, current results, and next work.
-- `notebooks/1_eda.ipynb` builds the task inventory: coverage, train/test counts, grid geometry, color usage, shape changes, visual samples, and first-pass solver buckets.
-- `notebooks/2_baseline_models.ipynb` builds the ONNX packaging baseline and writes a complete `submission.zip` containing `task001.onnx` through `task400.onnx`.
-- `notebooks/3_solver_diagnostics.ipynb` measures strict simple-solver compatibility, connected-component complexity, shape-change behavior, palette deltas, and recommended solver tracks.
-- `notebooks/4_solver_development.ipynb` starts the real solver workflow by creating train-fit candidate tables for simple same-shape and shape-changing rules.
-- `notebooks/5_simple_solver_export.ipynb` exports the first input-derived ONNX solvers and keeps fallback models for complete archive coverage.
+- Dataset coverage is complete: `400 / 400` normalized tasks.
+- The benchmark is low-shot: median `3` training examples per task.
+- Shape-changing tasks are significant: `138 / 400` tasks change shape in train pairs.
+- Palette behavior is mixed: `176` same-palette tasks, `91` removes-color tasks, `86` introduces-color tasks, and `47` mixed palette-change tasks.
+- Strict simple solvers explain a small first slice: `62` same-shape candidates and `4` simple shape-changing candidates.
+- The largest next queues are object movement/selection and crop/extract/compress.
 
-## 2. Key Findings
+## 2. Repository Structure
 
-- The benchmark load is complete: `400 / 400` normalized tasks are present.
-- The dataset is low-shot: the median task has `3` training examples, with a range from `2` to `10`.
-- Shape-changing tasks are a major segment: `138 / 400` tasks change shape in train pairs.
-- Most tasks have one test case, but `14` tasks have multiple test cases, so the submission pipeline must support more than one invocation pattern.
-- Color `0` dominates train inputs and outputs, making background handling a core primitive rather than a minor detail.
-- Palette behavior is mixed: `176` same-palette tasks, `91` removes-color tasks, `86` introduces-color tasks, and `47` tasks that both introduce and remove colors.
+```text
+.
+├── README.md
+├── docs/
+│   ├── 1_instructions.md
+│   ├── 2_eda_insights.md
+│   ├── 3_baseline_models.md
+│   ├── assets/
+│   ├── coding-rules.md
+│   └── figures/
+└── notebooks/
+    ├── 1_eda.ipynb
+    ├── 2_baseline_models.ipynb
+    ├── 3_solver_diagnostics.ipynb
+    ├── 4_solver_development.ipynb
+    └── 5_simple_solver_export.ipynb
+```
 
-## 3. Diagnostic Results
+The repository is intentionally notebook-first. Kaggle notebooks are the executable source of truth; `docs/` captures interpretation, results, and project decisions.
 
-Strict simple solvers explain a useful but limited slice of the benchmark:
+## 3. Notebook Workflow
 
-- `62` tasks are compatible with at least one simple same-shape solver.
-- `50` tasks match a background-to-single-color pattern.
-- `5` tasks match a global color-map pattern.
-- Basic geometric transforms such as flips, rotations, and transpose cover only a handful of tasks.
-- Strict shape-changing heuristics currently explain `4` tasks: crop, integer scale, or periodic tiling.
-- Together, strict simple rules cover only `66` solver candidates before overlap checks and ONNX export, so most improvement must come from object and construction logic.
+| Notebook | Purpose | Current role |
+| --- | --- | --- |
+| `1_eda.ipynb` | Dataset profiling, visual task review, difficult-task gallery | Defines the modeling problem and evidence base |
+| `2_baseline_models.ipynb` | Complete ONNX packaging baseline | Validates archive structure and fallback behavior |
+| `3_solver_diagnostics.ipynb` | Strict solver checks and component diagnostics | Quantifies solver-family opportunities |
+| `4_solver_development.ipynb` | Candidate tables for solver routing | Produces task-level next-action artifacts |
+| `5_simple_solver_export.ipynb` | Scorer-compatible simple ONNX export | Generates solved-task-only submission zip |
 
-The broader modeling backlog is therefore object- and structure-heavy:
+Recommended Kaggle run order:
 
-- `148` tasks: object movement or object selection
-- `101` tasks: crop, extract, or compress
-- `62` tasks: simple same-shape solver candidates
-- `52` tasks: pattern, counting, or global logic
-- `33` tasks: expand, tile, or construct
-- `4` tasks: simple shape solver candidates
+1. Run `1_eda.ipynb` to refresh EDA outputs and figures.
+2. Run `3_solver_diagnostics.ipynb` to refresh solver routing evidence.
+3. Run `4_solver_development.ipynb` to export candidate tables.
+4. Run `5_simple_solver_export.ipynb` to create the current scorer-compatible `submission.zip`.
+5. Keep `2_baseline_models.ipynb` as a packaging reference and regression check.
 
-The solver-development candidate table routes the same benchmark into a slightly different implementation queue: `158` object movement/selection tasks, `99` crop/extract/compress tasks, `62` simple same-shape exports, `45` pattern/counting/global-logic tasks, `32` expand/tile/construct tasks, and `4` simple shape exports.
+## 4. Technical Skills
 
-Full EDA notes are maintained in `docs/2_eda_insights.md`.
+- Python notebook engineering for Kaggle execution.
+- ARC-style grid analysis and symbolic rule diagnostics.
+- Pandas and NumPy feature engineering for task-level metadata.
+- Matplotlib visual diagnostics with ARC token palettes.
+- ONNX graph construction with static tensor interfaces.
+- ONNX Runtime validation and submission artifact checks.
+- Rule-based solver design: color maps, constant rules, identity, spatial gather, and convolution candidates.
+- Competition workflow hygiene: manifests, validation tables, lightweight docs, and reproducible notebook outputs.
 
-## 4. Baseline Status
+## 5. Current Lessons
 
-The current baseline is primarily a submission-system validation baseline. It proves that the repository can generate a complete ONNX archive with one model per expected task.
+- Local ONNX Runtime validation is not enough. The Kaggle scorer rejected raw 2D `int64` grid models even when they ran locally.
+- The scorer-compatible interface is static one-hot `float32` tensors with shape `[1, 10, 30, 30]`.
+- A solved-task-only `submission.zip` is safer than a complete archive full of placeholder networks.
+- Constant-output baselines are useful for packaging validation, but they are not a real solver strategy.
+- Train-fit diagnostics need a second gate: public-output validation can reject rules that fit training pairs.
+- Simple global rules are not enough. The largest unsolved queues require object movement/selection and crop/extract/compress reasoning.
 
-Current baseline behavior:
+## 6. Current Results
 
-- Single-test tasks use constant-output ONNX models.
-- Structurally compatible multi-test tasks use an input-equality selector model.
-- Unsupported tasks use a dynamic-input constant fallback so the archive remains complete.
-- The generated archive is `submission.zip`.
-- A manifest records which model strategy was used for each task.
+EDA and diagnostics:
 
-This baseline is not the final modeling strategy. Its purpose is to validate file naming, ONNX graph construction, runtime validation, archive completeness, and submission mechanics.
+- `400 / 400` tasks loaded.
+- `386` single-test tasks and `14` multi-test tasks.
+- `262` same-area tasks and `138` shape-changing tasks.
+- `50` background-to-single-color candidates.
+- `5` global color-map candidates.
+- `4` strict simple shape-changing candidates.
 
-Detailed baseline notes are maintained in `docs/3_baseline_models.md`.
+Candidate routing from solver development:
 
-## 5. Modeling Roadmap
+- `158` tasks: object movement/selection
+- `99` tasks: crop/extract/compress
+- `62` tasks: simple same-shape export candidates
+- `45` tasks: pattern/counting/global logic
+- `32` tasks: expand/tile/construct
+- `4` tasks: simple shape export candidates
 
-The next solver notebooks should prioritize train-fit coverage before ONNX optimization. The fourth notebook now creates the candidate table that should drive implementation order:
+Latest export direction:
 
-1. Implement background-to-single-color and global color-map solvers.
-2. Add connected-component object extraction, movement, and selection solvers.
-3. Build crop, extract, and compression solvers for shape-changing tasks.
-4. Add expansion, tiling, and construction solvers.
-5. Investigate high-component tasks with pattern, counting, grid-line, and global-logic diagnostics.
+- `5_simple_solver_export.ipynb` now follows the successful scorer pattern: one-hot `float32` tensors and solved-task-only zip packaging.
 
-The intended progression is simple: measure coverage, implement narrow solvers, validate on training pairs, then export only the reliable solver families to ONNX.
+## 7. Run Instructions
 
-The next Kaggle run should execute `notebooks/5_simple_solver_export.ipynb` after notebook 4. Its first target is the safest same-shape export slice: full-background-fill and global-color-map models.
+This project is designed to run on Kaggle with the NeuroGolf competition dataset attached.
+
+Kaggle steps:
+
+1. Open the target notebook under `notebooks/`.
+2. Attach the NeuroGolf 2026 competition dataset.
+3. Run all cells.
+4. For submission, download `/kaggle/working/submission.zip`.
+5. For analysis handoff, download the CSV manifests written under `/kaggle/working`.
+
+Important outputs:
+
+- `submission.zip`
+- `simple_logic_manifest.csv`
+- `neurogolf_solver_candidate_table.csv`
+- `neurogolf_same_shape_solver_fits.csv`
+- `neurogolf_shape_solver_fits.csv`
+- EDA figures and summaries from notebook 1
+
+## 8. Next Work
+
+Immediate next step:
+
+- Run `5_simple_solver_export.ipynb` on Kaggle and confirm that the solved-task-only one-hot ONNX submission receives a score.
+
+Modeling next steps:
+
+1. Add exact object extraction and object selection diagnostics for the `158` object movement/selection tasks.
+2. Split the `99` crop/extract/compress tasks into object crop, bounding-box crop, selected-object output, summary/count output, and fixed-template output.
+3. Expand notebook 5 with only scorer-compatible ONNX builders.
+4. Keep a manifest of solved task ids, solver family, validation status, and estimated score for every submitted model.
+5. Promote a solver family only when it validates on all available task pairs and survives Kaggle scoring.
+
+Detailed notes:
+
+- EDA evidence: `docs/2_eda_insights.md`
+- Baseline and submission notes: `docs/3_baseline_models.md`
+- Project rules: `docs/coding-rules.md`

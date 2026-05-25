@@ -155,7 +155,7 @@ Latest candidate-table routing shows the first export slice is narrow: `62` simp
 
 The first export notebook is `notebooks/5_simple_solver_export.ipynb`. It turns the safest same-shape candidates into input-derived ONNX graphs and keeps constant fallbacks for all unsupported tasks so the archive remains complete.
 
-Latest simple-solver export run:
+Previous simple-solver export run:
 
 - `400` ONNX files generated.
 - `submission.zip` contains `400 / 400` expected files.
@@ -171,6 +171,18 @@ Interpretation:
 - The first real solver export is structurally valid, but it is not yet stronger than the packaging baseline.
 - Train-fit global color maps can still fail on public test inputs, so global-color-map export should require an additional test-structure or public-validation gate before being used in a scoring submission.
 - The next improvement should add a stricter solver acceptance policy: keep a train-fit solver only when runtime validation passes; otherwise fall back to the packaging model for that task.
+
+Submission compatibility update:
+
+- The Kaggle scorer rejected the raw 2D `int64` ONNX interface even when local `onnxruntime` validation passed.
+- A successful reference notebook uses a static one-hot `float32` interface: input and output tensors are `[1, 10, 30, 30]`.
+- The scorer also accepts a solved-task-only zip; it does not require placeholder ONNX files for all `400` tasks.
+- `notebooks/5_simple_solver_export.ipynb` now follows this pattern: export only validated solved tasks with the one-hot tensor interface.
+
+Expected output from the updated notebook:
+
+- `submission.zip` containing only solved `taskXXX.onnx` files.
+- `simple_logic_manifest.csv` listing solved task ids, solver family, estimated cost, and estimated score.
 
 ## 6. Success Criteria for the Next Modeling Step
 

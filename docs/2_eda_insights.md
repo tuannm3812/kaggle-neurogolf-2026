@@ -341,5 +341,5 @@ Readiness assessment:
 Next notebook:
 
 - `notebooks/5_simple_solver_export.ipynb` exports the first input-derived ONNX solver families.
-- It starts with the safer exportable subset of same-shape rules: full-background-fill and global color-map models.
-- It preserves a complete `submission.zip` by keeping fallback models for tasks not yet solved by input-derived rules.
+- It now uses the scorer-compatible one-hot `float32` tensor interface, `[1, 10, 30, 30]`, rather than raw 2D integer grids.
+- It writes only validated solved task models to `submission.zip`, matching the successful reference-submission pattern.
