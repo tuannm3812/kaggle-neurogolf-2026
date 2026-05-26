@@ -107,7 +107,8 @@ Latest export direction:
 
 - Version 5 of `5_simple_solver_export.ipynb` produced the first successful public score: `253.94`.
 - Versions 8 and 9 also scored `253.94`; the added public-output fallback did not move the leaderboard score.
-- The next notebook revision disables fallback by default and chooses the lowest-cost validated input-derived model per task.
+- Version 10 also scored `253.94` with `60` validated input-derived models, so the plateau is a solver-coverage problem rather than a packaging problem.
+- The next notebook revision adds a geometric-color-map solver for fixed flips, rotations, and transposes followed by recoloring.
 
 ## 7. Run Instructions
 

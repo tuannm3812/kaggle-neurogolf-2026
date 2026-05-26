@@ -200,6 +200,19 @@ Next score-improvement revision:
 - The cost estimate now counts ONNX weights embedded through `Constant` nodes, which is important for learned convolution models.
 - The manifest now records `candidate_count` so repeated validated solver families can be reviewed.
 
+Version 10 result:
+
+- Version 10 also scored `253.94`.
+- The run exported `60 / 400` input-derived task models.
+- Solver mix was `37` spatial gather, `17` learned 3x3 convolution, `4` global color map, and `2` learned 1x1 convolution.
+- This confirms the score plateau is caused by solver coverage, not submission formatting.
+
+Next solver addition:
+
+- Add a geometric-color-map solver for fixed flips, rotations, and transposes followed by consistent recoloring.
+- Keep public-output fallback disabled by default.
+- Use the manifest's `candidate_count` to identify tasks where lower-cost exact solvers can replace learned convolution models.
+
 ## 6. Success Criteria for the Next Modeling Step
 
 A real baseline solver should be considered useful only if it:
