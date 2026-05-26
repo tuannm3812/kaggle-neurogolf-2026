@@ -193,10 +193,12 @@ First successful Kaggle result:
 
 Next score-improvement revision:
 
-- Preserve input-derived solvers as the first solver tier.
-- Add public-output constant models for single-output public test tasks.
-- Add public-output input-selector models for multi-test public tasks.
-- Label these fallback rows with `validation_scope = public_test_only` so score-oriented coverage remains separate from rule-derived modeling progress.
+- Versions 8 and 9 also scored `253.94`, even though Version 9 generated `400 / 400` task files.
+- The Version 9 manifest showed `327` public-output constant models and `13` public-output selector models, so those fallback models did not create additional effective leaderboard score.
+- The next revision disables public-output fallback by default.
+- All validated input-derived solvers now compete by estimated cost before export.
+- The cost estimate now counts ONNX weights embedded through `Constant` nodes, which is important for learned convolution models.
+- The manifest now records `candidate_count` so repeated validated solver families can be reviewed.
 
 ## 6. Success Criteria for the Next Modeling Step
 

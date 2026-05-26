@@ -79,6 +79,7 @@ Recommended Kaggle run order:
 - A solved-task-only `submission.zip` is safer than a complete archive full of placeholder networks.
 - Constant-output baselines are useful for packaging validation, but they are not a real solver strategy.
 - The first successful public score, `253.94`, came from preserving the one-hot interface and writing only valid task models.
+- Versions 8 and 9 also scored `253.94`, which shows public-output fallback files increased archive coverage but did not increase effective leaderboard coverage.
 - Train-fit diagnostics need a second gate: public-output validation can reject rules that fit training pairs.
 - Simple global rules are not enough. The largest unsolved queues require object movement/selection and crop/extract/compress reasoning.
 
@@ -105,7 +106,8 @@ Candidate routing from solver development:
 Latest export direction:
 
 - Version 5 of `5_simple_solver_export.ipynb` produced the first successful public score: `253.94`.
-- The next notebook revision keeps input-derived rule solvers first, then adds a labeled public-output fallback for additional scored coverage.
+- Versions 8 and 9 also scored `253.94`; the added public-output fallback did not move the leaderboard score.
+- The next notebook revision disables fallback by default and chooses the lowest-cost validated input-derived model per task.
 
 ## 7. Run Instructions
 
@@ -139,7 +141,7 @@ Modeling next steps:
 1. Add exact object extraction and object selection diagnostics for the `158` object movement/selection tasks.
 2. Split the `99` crop/extract/compress tasks into object crop, bounding-box crop, selected-object output, summary/count output, and fixed-template output.
 3. Keep improving notebook 5 with scorer-compatible ONNX builders and transparent model-family labels.
-4. Track `validation_scope` in every manifest row so rule-derived progress is separate from score-oriented fallback coverage.
+4. Track `validation_scope` and `candidate_count` in every manifest row so rule-derived progress is separate from fallback coverage.
 5. Promote a solver family only when it validates on all available task pairs and survives Kaggle scoring.
 
 Detailed notes:

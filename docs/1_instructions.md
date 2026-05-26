@@ -175,7 +175,8 @@ Current baseline results:
 - Public score is `253.94`.
 - The accepted interface is static one-hot `float32` with shape `[1, 10, 30, 30]`.
 - The accepted archive strategy is to include only validated task models rather than invalid placeholders.
-- Notebook 5 now separates input-derived rule solvers from score-oriented public-output fallback models.
+- Versions 8 and 9 repeated the same `253.94` public score, so public-output fallback models did not improve effective leaderboard coverage.
+- Notebook 5 now focuses on cost-aware input-derived solver export, with public-output fallback disabled by default.
 
 ## 6. Solution Principles
 
@@ -190,7 +191,7 @@ Current baseline results:
 
 ## 7. Next Work
 
-The next implementation step is to rerun the refined scorer-compatible export notebook and compare the score against the `253.94` baseline.
+The next implementation step is to rerun the cost-aware scorer-compatible export notebook and compare the score against the `253.94` baseline.
 
 Recommended next notebook:
 
@@ -201,6 +202,7 @@ Expected output:
 - `submission.zip`
 - `simple_logic_manifest.csv`
 - task-level solver-family counts in the notebook output
+- `candidate_count` and `validation_scope` fields in the manifest
 
 Supporting diagnostics:
 
