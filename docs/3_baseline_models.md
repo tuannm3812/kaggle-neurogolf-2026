@@ -238,6 +238,18 @@ Next solver addition:
 - This is a controlled test for wider same-shape local rules that cannot be captured by the current 3x3 tier.
 - If the task count remains `60`, the next step should move away from notebook 5 and build object-level dynamic solvers in a dedicated notebook.
 
+Version 14 result:
+
+- The learned 5x5 tier increased internal validated coverage from `60 / 400` to `62 / 400`.
+- Public score remained `253.94`, so the additional internally solved tasks did not land on the public leaderboard slice.
+- This confirms that additional same-shape local filters are lower priority than dynamic object reasoning.
+
+Reference task-111 lesson:
+
+- The downloaded task-111 reference notebook solves a marker-crop task by locating a single gray anchor pixel inside ONNX, computing row/column coordinates with reductions and `ArgMax`, and slicing a `3 x 3` output window relative to that marker.
+- The useful pattern is not the hard-coded task id; it is the ONNX design: unique marker detection, dynamic crop bounds, and padded static `[1, 10, 30, 30]` output.
+- Notebook 5 now generalizes that idea as `dynamic_anchor_crop`, which learns the anchor color, crop offset, and output shape from available examples before exporting the ONNX graph.
+
 ## 6. Success Criteria for the Next Modeling Step
 
 A real baseline solver should be considered useful only if it:

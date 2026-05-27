@@ -200,11 +200,116 @@ Latest solver-development routing:
 - `32` tasks: deep dive expand/tile/construct
 - `4` tasks: export simple shape solver
 
-## 10. Visual Evidence and Figure Insights
+## 10. Difficult Cases and Modeling Challenges
+
+The difficult examples are not only outliers; they define the failure modes that a stronger solver must handle. The current EDA suggests five main challenge types.
+
+### 10.1 Anchor-Relative Crops
+
+Some compression tasks appear to select a small output window around a marker, special color, or unique object. These are difficult for fixed-position crop solvers because the crop location changes by example.
+
+Modeling implication:
+
+- Detect unique anchor colors or unique objects.
+- Infer the output window offset from the anchor.
+- Export the crop as dynamic ONNX logic, not as a memorized fixed gather.
+- Keep this family separate from simple bounding-box crop because the selected output can be near, beside, or below the marker rather than exactly equal to the marker's bounding box.
+
+Current action:
+
+- Notebook 5 now includes `dynamic_anchor_crop`, inspired by the public task-111 reference notebook.
+
+### 10.2 Object Selection and Movement
+
+The largest unsolved queue is object movement/selection. These tasks often preserve objects but change their location, remove distractors, or select one object based on size, color, position, or relation.
+
+Why this is hard:
+
+- Connected components can be ambiguous when objects touch or share colors.
+- The selected object may not be the largest or smallest object globally.
+- Output may preserve object shape while changing position, canvas size, or color.
+- A rule can depend on relative position, such as inside/outside, aligned with, nearest to, or between objects.
+
+Modeling implication:
+
+- Add component-level features: bounding box, area, density, color, centroid, and shape signature.
+- Match input objects to output objects across train pairs.
+- Prioritize solver templates that can be expressed compactly in ONNX: crop selected object, move object to a canonical position, remove non-selected objects, or recolor selected object.
+
+### 10.3 Compression and Summary Outputs
+
+The `99` crop/extract/compress candidates are mixed. Some are object crops, but others likely produce summaries such as counts, compact symbols, or canonicalized layouts.
+
+Why this is hard:
+
+- A small output is not always a crop.
+- Output shape may encode the answer, not just the selected region.
+- Some outputs preserve colors but discard exact geometry.
+- Counting and summarization often require global logic rather than local filters.
+
+Modeling implication:
+
+- Split compression tasks into exact crop, bounding-box crop, anchor-relative crop, selected-object output, count/summary output, and fixed-template output.
+- Treat each subtype as a separate solver track with its own validation rules.
+- Avoid promoting a generic compression solver unless it explains the train pairs structurally.
+
+### 10.4 Expansion, Tiling, and Construction
+
+Expansion tasks are fewer than compression tasks, but they are likely high-value because they require explicit output construction. `task398` is a useful stress example for this track.
+
+Why this is hard:
+
+- Output shape may be a multiple of input shape, an object bounding box, or a task-specific canvas.
+- Repetition can depend on color, object count, object position, or pattern period.
+- Some expansion tasks combine tiling with recoloring or masking.
+
+Modeling implication:
+
+- Start with deterministic output-size rules: integer scale, tile repeat, reflected tile, and object replication.
+- Add period detection for rows and columns.
+- Keep construction solvers small; dense constants can pass validation but lose score because of model cost.
+
+### 10.5 Pattern, Counting, and Global Logic
+
+The pattern/counting/global bucket is smaller but has the highest component complexity. These tasks should not be the first scoring target, but they are important for later improvement.
+
+Why this is hard:
+
+- Rules may depend on counts, parity, symmetry, repeated motifs, or grid-line regions.
+- High component counts make object-level matching noisy.
+- A correct solution may require deciding what is signal versus background texture.
+
+Modeling implication:
+
+- Add diagnostics before solvers: grid-line detection, region segmentation, row/column period, symmetry checks, component histograms, and color-count deltas.
+- Defer ONNX export until the diagnostic table can identify a narrow rule family.
+
+## 11. Practical Modeling Lessons from EDA
+
+The strongest current lesson is that internal validation coverage and public score can diverge. The learned 5x5 convolution tier improved notebook coverage from `60` to `62` validated tasks, but the public score stayed at `253.94`. That makes broad same-shape local filters a lower-priority direction.
+
+The next score-improvement work should therefore focus on:
+
+1. Dynamic anchor crops.
+2. Dynamic bounding-box crops.
+3. Selected-object extraction.
+4. Object movement or canonical placement.
+5. Output-size inference for compression and expansion.
+
+What to track in every future notebook output:
+
+- exact task ids newly covered;
+- solver family selected;
+- whether the solver is input-derived or public-output fallback;
+- model cost estimate;
+- whether the solver overlaps with an already cheaper candidate;
+- whether public score changes after Kaggle submission.
+
+## 12. Visual Evidence and Figure Insights
 
 The EDA figures are included here as evidence for modeling decisions. The goal is not to list every generated file; it is to connect each visual to a solver implication.
 
-### 10.1 Pair Distributions
+### 12.1 Pair Distributions
 
 ![Pair distributions](figures/eda/1_pair_distributions.png)
 
@@ -214,7 +319,7 @@ Insight:
 - `386 / 400` tasks have one test case, but the `14` multi-test tasks are disproportionately important for submission robustness.
 - Modeling implication: prioritize rule induction and train-fit checks over statistical fitting, and keep multi-test tasks in every validation pass.
 
-### 10.2 Grid Geometry
+### 12.2 Grid Geometry
 
 ![Grid geometry](figures/eda/2_grid_geometry.png)
 
@@ -224,7 +329,7 @@ Insight:
 - `138 / 400` tasks change shape in training pairs, so dynamic output construction cannot be treated as an edge case.
 - Modeling implication: maintain separate solver tracks for same-shape transformations, compression/extraction, and expansion/construction.
 
-### 10.3 Color Frequency
+### 12.3 Color Frequency
 
 ![Color frequency](figures/eda/3_color_frequency.png)
 
@@ -234,7 +339,7 @@ Insight:
 - Background logic should be explicit rather than incidental, but task-specific checks are still needed because removing or introducing color `0` can itself be part of the rule.
 - Modeling implication: background detection, masking, fill operations, and object extraction should be first-class primitives in solver code.
 
-### 10.4 Palette Relation
+### 12.4 Palette Relation
 
 ![Palette relation](figures/eda/5_palette_relation.png)
 
@@ -244,7 +349,7 @@ Insight:
 - Introduced and removed colors indicate that many transformations are semantic, not only geometric.
 - Modeling implication: separate pure geometry solvers from recoloring, marking, filtering, and label-generation solvers.
 
-### 10.5 Difficult Task Gallery
+### 12.5 Difficult Task Gallery
 
 The difficult-task gallery selects concrete stress examples from the latest EDA run.
 
@@ -290,7 +395,7 @@ Insight:
 - `task003` combines shape change with color replacement.
 - Modeling implication: early solvers should not assume that shape-change and palette-change families are independent.
 
-### 10.6 Solver Planning Buckets
+### 12.6 Solver Planning Buckets
 
 ![Solver planning buckets](figures/eda/13_solver_planning_buckets.png)
 
@@ -300,7 +405,7 @@ Insight:
 - The largest broad bucket is shape-changing, followed by larger same-shape tasks that likely need object or pattern reasoning.
 - Modeling implication: implement narrow train-fit solvers first, then use failure buckets to decide where deeper object diagnostics are necessary.
 
-## 11. Solver Development Output Insights
+## 13. Solver Development Output Insights
 
 The downloaded `neurogolf_solver_development_artifacts.zip` contains the three expected files:
 

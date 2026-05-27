@@ -110,7 +110,8 @@ Latest export direction:
 - Version 10 also scored `253.94` with `60` validated input-derived models, so the plateau is a solver-coverage problem rather than a packaging problem.
 - Version 12 also scored `253.94`; geometric-color-map candidates overlapped with already-solved tasks.
 - Version 13 also scored `253.94`; fixed-crop export did not add selected tasks.
-- The next notebook revision adds a learned 5x5 convolution tier to test wider local same-shape rules.
+- The learned 5x5 convolution tier lifted internal coverage from `60` to `62` validated tasks, but the public score stayed `253.94`.
+- The next export direction is dynamic object logic: bounding-box crops and anchor-relative crops, inspired by the public task-111 reference solution.
 
 ## 7. Run Instructions
 
@@ -137,13 +138,13 @@ Important outputs:
 
 Immediate next step:
 
-- Run the updated `5_simple_solver_export.ipynb` on Kaggle and compare its score against the `253.94` public baseline.
+- Run the updated `5_simple_solver_export.ipynb` on Kaggle and compare the dynamic object-crop submission against the `253.94` public baseline.
 
 Modeling next steps:
 
 1. Add exact object extraction and object selection diagnostics for the `158` object movement/selection tasks.
 2. Split the `99` crop/extract/compress tasks into object crop, bounding-box crop, selected-object output, summary/count output, and fixed-template output.
-3. Keep improving notebook 5 with scorer-compatible ONNX builders and transparent model-family labels.
+3. Prioritize anchor-relative crop rules where a unique marker color defines the output window.
 4. Track `validation_scope` and `candidate_count` in every manifest row so rule-derived progress is separate from fallback coverage.
 5. Promote a solver family only when it validates on all available task pairs and survives Kaggle scoring.
 
