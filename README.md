@@ -109,7 +109,8 @@ Latest export direction:
 - Versions 8 and 9 also scored `253.94`; the added public-output fallback did not move the leaderboard score.
 - Version 10 also scored `253.94` with `60` validated input-derived models, so the plateau is a solver-coverage problem rather than a packaging problem.
 - Version 12 also scored `253.94`; geometric-color-map candidates overlapped with already-solved tasks.
-- The next notebook revision adds fixed rectangular crop export for crop/extract/compress tasks.
+- Version 13 also scored `253.94`; fixed-crop export did not add selected tasks.
+- The next notebook revision adds a learned 5x5 convolution tier to test wider local same-shape rules.
 
 ## 7. Run Instructions
 

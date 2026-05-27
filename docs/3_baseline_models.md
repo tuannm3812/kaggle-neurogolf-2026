@@ -225,6 +225,19 @@ Next solver addition:
 - Target shape-changing crop/extract/compress tasks where one stable input window maps to the output.
 - Keep the solver accepted only when it validates on all available train and public test pairs.
 
+Version 13 result:
+
+- Version 13 still scored `253.94`.
+- The pulled output still selected exactly `60 / 400` models.
+- Solver mix remained `37` spatial gather, `17` learned 3x3 convolution, `4` global color map, and `2` learned 1x1 convolution.
+- The fixed-crop solver did not add newly selected tasks.
+
+Next solver addition:
+
+- Add a learned 5x5 convolution tier.
+- This is a controlled test for wider same-shape local rules that cannot be captured by the current 3x3 tier.
+- If the task count remains `60`, the next step should move away from notebook 5 and build object-level dynamic solvers in a dedicated notebook.
+
 ## 6. Success Criteria for the Next Modeling Step
 
 A real baseline solver should be considered useful only if it:
