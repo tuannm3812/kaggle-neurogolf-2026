@@ -108,7 +108,8 @@ Latest export direction:
 - Version 5 of `5_simple_solver_export.ipynb` produced the first successful public score: `253.94`.
 - Versions 8 and 9 also scored `253.94`; the added public-output fallback did not move the leaderboard score.
 - Version 10 also scored `253.94` with `60` validated input-derived models, so the plateau is a solver-coverage problem rather than a packaging problem.
-- The next notebook revision adds a geometric-color-map solver for fixed flips, rotations, and transposes followed by recoloring.
+- Version 12 also scored `253.94`; geometric-color-map candidates overlapped with already-solved tasks.
+- The next notebook revision adds fixed rectangular crop export for crop/extract/compress tasks.
 
 ## 7. Run Instructions
 

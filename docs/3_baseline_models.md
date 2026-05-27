@@ -213,6 +213,18 @@ Next solver addition:
 - Keep public-output fallback disabled by default.
 - Use the manifest's `candidate_count` to identify tasks where lower-cost exact solvers can replace learned convolution models.
 
+Version 12 result:
+
+- Version 12 still scored `253.94`.
+- The geometric-color-map solver did not become the selected solver for any new task in the pulled notebook output.
+- The added candidates overlapped with tasks already handled by cheaper existing solvers.
+
+Next solver addition:
+
+- Add a fixed rectangular crop solver using ONNX gather.
+- Target shape-changing crop/extract/compress tasks where one stable input window maps to the output.
+- Keep the solver accepted only when it validates on all available train and public test pairs.
+
 ## 6. Success Criteria for the Next Modeling Step
 
 A real baseline solver should be considered useful only if it:
