@@ -24,6 +24,7 @@ Use numbered, stable names without zero padding:
 - `notebooks/3_solver_diagnostics.ipynb`
 - `notebooks/4_solver_development.ipynb`
 - `notebooks/5_simple_solver_export.ipynb`
+- `notebooks/6_score_plateau_triage.ipynb`
 
 Notebook names should describe the actual Kaggle workflow. Do not split model generation and submission packaging into separate notebooks when the competition flow is meant to run end-to-end.
 

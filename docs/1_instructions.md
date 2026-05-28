@@ -204,6 +204,14 @@ Expected output:
 - task-level solver-family counts in the notebook output
 - `candidate_count` and `validation_scope` fields in the manifest
 
+Score plateau triage:
+
+- `notebooks/6_score_plateau_triage.ipynb`
+- compare one or more `simple_logic_manifest.csv` files from Kaggle output datasets;
+- identify whether new solver families selected any task ids;
+- render newly added or dynamic-crop task panels;
+- write `score_triage_artifacts.zip` for review.
+
 Supporting diagnostics:
 
 - `notebooks/4_solver_development.ipynb`

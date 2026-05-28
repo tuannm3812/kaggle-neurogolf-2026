@@ -250,6 +250,12 @@ Reference task-111 lesson:
 - The useful pattern is not the hard-coded task id; it is the ONNX design: unique marker detection, dynamic crop bounds, and padded static `[1, 10, 30, 30]` output.
 - Notebook 5 now generalizes that idea as `dynamic_anchor_crop`, which learns the anchor color, crop offset, and output shape from available examples before exporting the ONNX graph.
 
+Score plateau triage:
+
+- Use `notebooks/6_score_plateau_triage.ipynb` after any unchanged public score.
+- Attach prior and current notebook-5 Kaggle output datasets so the notebook can compare `simple_logic_manifest.csv` files.
+- The key evidence is whether the new solver selected added task ids, whether those task ids are dynamic crop tasks, and whether the rendered examples support the inferred rule.
+
 ## 6. Success Criteria for the Next Modeling Step
 
 A real baseline solver should be considered useful only if it:

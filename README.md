@@ -38,7 +38,8 @@ NeuroGolf 2026 is an ARC-style grid-reasoning competition where each task must b
     ├── 2_baseline_models.ipynb
     ├── 3_solver_diagnostics.ipynb
     ├── 4_solver_development.ipynb
-    └── 5_simple_solver_export.ipynb
+    ├── 5_simple_solver_export.ipynb
+    └── 6_score_plateau_triage.ipynb
 ```
 
 The repository is intentionally notebook-first. Kaggle notebooks are the executable source of truth; `docs/` captures interpretation, results, and project decisions.
@@ -52,6 +53,7 @@ The repository is intentionally notebook-first. Kaggle notebooks are the executa
 | `3_solver_diagnostics.ipynb` | Strict solver checks and component diagnostics | Quantifies solver-family opportunities |
 | `4_solver_development.ipynb` | Candidate tables for solver routing | Produces task-level next-action artifacts |
 | `5_simple_solver_export.ipynb` | Scorer-compatible ONNX export | Generates rule-derived and score-oriented task models |
+| `6_score_plateau_triage.ipynb` | Score plateau diagnosis | Compares manifests, isolates new coverage, and renders review panels |
 
 Recommended Kaggle run order:
 
@@ -59,7 +61,8 @@ Recommended Kaggle run order:
 2. Run `3_solver_diagnostics.ipynb` to refresh solver routing evidence.
 3. Run `4_solver_development.ipynb` to export candidate tables.
 4. Run `5_simple_solver_export.ipynb` to create the current scorer-compatible `submission.zip`.
-5. Keep `2_baseline_models.ipynb` as a packaging reference and regression check.
+5. Run `6_score_plateau_triage.ipynb` when a new public score is unchanged.
+6. Keep `2_baseline_models.ipynb` as a packaging reference and regression check.
 
 ## 4. Technical Skills
 
@@ -129,6 +132,7 @@ Important outputs:
 
 - `submission.zip`
 - `simple_logic_manifest.csv`
+- `score_triage_artifacts.zip`
 - `neurogolf_solver_candidate_table.csv`
 - `neurogolf_same_shape_solver_fits.csv`
 - `neurogolf_shape_solver_fits.csv`
