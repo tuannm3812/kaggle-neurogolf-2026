@@ -11,17 +11,87 @@
 
 NeuroGolf 2026 is an ARC-style grid-reasoning competition where each task must be solved by an ONNX model. This repository documents a notebook-first solution workflow: explore the task distribution, measure solver opportunities, build a valid ONNX packaging baseline, then move toward evaluator-compatible input-derived solvers.
 
-## 1. Project Snapshot
+## 1. Project Overview
 
-- Dataset coverage is complete: `400 / 400` normalized tasks.
-- The benchmark is low-shot: median `3` training examples per task.
-- Shape-changing tasks are significant: `138 / 400` tasks change shape in train pairs.
-- Palette behavior is mixed: `176` same-palette tasks, `91` removes-color tasks, `86` introduces-color tasks, and `47` mixed palette-change tasks.
-- Strict simple solvers explain a small first slice: `62` same-shape candidates and `4` simple shape-changing candidates.
-- The first scorer-compatible submission is successful with a public score of `253.94`.
-- The largest next queues are object movement/selection and crop/extract/compress.
+The project explores how far interpretable, compact ONNX programs can go on low-shot ARC-style tasks. Each task provides only a few input/output examples, so the core challenge is not conventional model training; it is rule discovery, solver selection, and valid ONNX export under scoring constraints.
 
-## 2. Repository Structure
+The current solution is deliberately staged:
+
+1. Profile the full task set with EDA and visual diagnostics.
+2. Build valid Kaggle-compatible ONNX submissions.
+3. Measure which symbolic solver families fit each task.
+4. Export only validated input-derived solvers.
+5. Use manifest-based triage when public score does not move.
+
+## 2. Task and Goal
+
+The competition task is to submit a `submission.zip` containing ONNX models named by task id, such as `task001.onnx`. Each model must accept a static one-hot `float32` tensor and produce the transformed output grid for that task.
+
+Our project goals are:
+
+- Build a reliable notebook-first workflow that runs on Kaggle.
+- Understand the `400` public tasks through EDA and solver diagnostics.
+- Produce scorer-compatible ONNX submissions with transparent manifests.
+- Replace public-output fallbacks with input-derived rule solvers.
+- Improve score through object, crop, movement, and construction logic.
+
+## 3. Key Metrics
+
+| Area | Current finding |
+| --- | --- |
+| Task coverage | `400 / 400` normalized tasks loaded |
+| Training density | Median `3` train examples per task |
+| Test structure | `386` single-test tasks, `14` multi-test tasks |
+| Shape behavior | `262` same-area tasks, `138` shape-changing tasks |
+| Palette behavior | `176` same-palette, `224` palette-changing tasks |
+| Simple solver slice | `62` same-shape candidates, `4` simple shape-changing candidates |
+| First valid public score | `253.94` |
+| Current plateau | Additional internal coverage has not yet moved public score |
+
+Solver-development routing:
+
+| Solver track | Task count | Priority |
+| --- | ---: | --- |
+| Object movement/selection | `158` | High |
+| Crop/extract/compress | `99` | High |
+| Simple same-shape export | `62` | Implemented as first export track |
+| Pattern/counting/global logic | `45` | Later diagnostic track |
+| Expand/tile/construct | `32` | Next construction track |
+| Simple shape export | `4` | Low-risk specialized track |
+
+## 4. Progress
+
+The project has reached a valid submission baseline and moved into solver-family development.
+
+Completed:
+
+- Full EDA coverage for all `400` tasks.
+- Difficult-task gallery and solver-track prioritization.
+- Baseline ONNX packaging workflow.
+- First successful scorer-compatible submission.
+- Static one-hot `float32` interface: `[1, 10, 30, 30]`.
+- Input-derived solver exports for color maps, spatial gather, local convolutions, fixed crops, bounding-box crops, and anchor-relative crops.
+- Manifest triage notebook for score-plateau analysis.
+
+Current result:
+
+- Public score: `253.94`.
+- Repeated versions with fallback and additional simple solvers stayed at `253.94`.
+- Learned `5x5` convolution improved internal validation from `60` to `62` tasks, but did not improve public score.
+- The next score-improvement direction is object-level reasoning rather than more same-shape local filters.
+
+## 5. Lessons Learned
+
+- Kaggle scorer compatibility matters as much as local ONNX Runtime validation. Raw 2D `int64` grid models can run locally and still fail the scorer.
+- The accepted pattern is a static one-hot `float32` interface with shape `[1, 10, 30, 30]`.
+- A solved-task-only archive is safer than a complete archive filled with weak or invalid placeholders.
+- Public-output fallback models can make an archive look more complete without improving effective leaderboard score.
+- Train-fit is not enough. Solvers need public-test validation and manifest-level tracking to avoid false confidence.
+- Simple global rules explain only a small slice of the benchmark.
+- The largest remaining opportunities are object movement/selection and crop/extract/compress tasks.
+- Manifest comparison is essential when score plateaus: new internal coverage may not overlap the public scored slice.
+
+## 6. Repository Map
 
 ```text
 .
@@ -44,7 +114,7 @@ NeuroGolf 2026 is an ARC-style grid-reasoning competition where each task must b
 
 The repository is intentionally notebook-first. Kaggle notebooks are the executable source of truth; `docs/` captures interpretation, results, and project decisions.
 
-## 3. Notebook Workflow
+## 7. Notebook Workflow
 
 | Notebook | Purpose | Current role |
 | --- | --- | --- |
@@ -55,16 +125,9 @@ The repository is intentionally notebook-first. Kaggle notebooks are the executa
 | `5_simple_solver_export.ipynb` | Scorer-compatible ONNX export | Generates rule-derived and score-oriented task models |
 | `6_score_plateau_triage.ipynb` | Score plateau diagnosis | Compares manifests, isolates new coverage, and renders review panels |
 
-Recommended Kaggle run order:
+Detailed run instructions and next work live in [docs/1_instructions.md](docs/1_instructions.md).
 
-1. Run `1_eda.ipynb` to refresh EDA outputs and figures.
-2. Run `3_solver_diagnostics.ipynb` to refresh solver routing evidence.
-3. Run `4_solver_development.ipynb` to export candidate tables.
-4. Run `5_simple_solver_export.ipynb` to create the current scorer-compatible `submission.zip`.
-5. Run `6_score_plateau_triage.ipynb` when a new public score is unchanged.
-6. Keep `2_baseline_models.ipynb` as a packaging reference and regression check.
-
-## 4. Technical Skills
+## 8. Technical Skills
 
 - Python notebook engineering for Kaggle execution.
 - ARC-style grid analysis and symbolic rule diagnostics.
@@ -75,85 +138,9 @@ Recommended Kaggle run order:
 - Rule-based solver design: color maps, constant rules, identity, spatial gather, and convolution candidates.
 - Competition workflow hygiene: manifests, validation tables, lightweight docs, and reproducible notebook outputs.
 
-## 5. Current Lessons
-
-- Local ONNX Runtime validation is not enough. The Kaggle scorer rejected raw 2D `int64` grid models even when they ran locally.
-- The scorer-compatible interface is static one-hot `float32` tensors with shape `[1, 10, 30, 30]`.
-- A solved-task-only `submission.zip` is safer than a complete archive full of placeholder networks.
-- Constant-output baselines are useful for packaging validation, but they are not a real solver strategy.
-- The first successful public score, `253.94`, came from preserving the one-hot interface and writing only valid task models.
-- Versions 8 and 9 also scored `253.94`, which shows public-output fallback files increased archive coverage but did not increase effective leaderboard coverage.
-- Train-fit diagnostics need a second gate: public-output validation can reject rules that fit training pairs.
-- Simple global rules are not enough. The largest unsolved queues require object movement/selection and crop/extract/compress reasoning.
-
-## 6. Current Results
-
-EDA and diagnostics:
-
-- `400 / 400` tasks loaded.
-- `386` single-test tasks and `14` multi-test tasks.
-- `262` same-area tasks and `138` shape-changing tasks.
-- `50` background-to-single-color candidates.
-- `5` global color-map candidates.
-- `4` strict simple shape-changing candidates.
-
-Candidate routing from solver development:
-
-- `158` tasks: object movement/selection
-- `99` tasks: crop/extract/compress
-- `62` tasks: simple same-shape export candidates
-- `45` tasks: pattern/counting/global logic
-- `32` tasks: expand/tile/construct
-- `4` tasks: simple shape export candidates
-
-Latest export direction:
-
-- Version 5 of `5_simple_solver_export.ipynb` produced the first successful public score: `253.94`.
-- Versions 8 and 9 also scored `253.94`; the added public-output fallback did not move the leaderboard score.
-- Version 10 also scored `253.94` with `60` validated input-derived models, so the plateau is a solver-coverage problem rather than a packaging problem.
-- Version 12 also scored `253.94`; geometric-color-map candidates overlapped with already-solved tasks.
-- Version 13 also scored `253.94`; fixed-crop export did not add selected tasks.
-- The learned 5x5 convolution tier lifted internal coverage from `60` to `62` validated tasks, but the public score stayed `253.94`.
-- The next export direction is dynamic object logic: bounding-box crops and anchor-relative crops, inspired by the public task-111 reference solution.
-
-## 7. Run Instructions
-
-This project is designed to run on Kaggle with the NeuroGolf competition dataset attached.
-
-Kaggle steps:
-
-1. Open the target notebook under `notebooks/`.
-2. Attach the NeuroGolf 2026 competition dataset.
-3. Run all cells.
-4. For submission, download `/kaggle/working/submission.zip`.
-5. For analysis handoff, download the CSV manifests written under `/kaggle/working`.
-
-Important outputs:
-
-- `submission.zip`
-- `simple_logic_manifest.csv`
-- `score_triage_artifacts.zip`
-- `neurogolf_solver_candidate_table.csv`
-- `neurogolf_same_shape_solver_fits.csv`
-- `neurogolf_shape_solver_fits.csv`
-- EDA figures and summaries from notebook 1
-
-## 8. Next Work
-
-Immediate next step:
-
-- Run the updated `5_simple_solver_export.ipynb` on Kaggle and compare the dynamic object-crop submission against the `253.94` public baseline.
-
-Modeling next steps:
-
-1. Add exact object extraction and object selection diagnostics for the `158` object movement/selection tasks.
-2. Split the `99` crop/extract/compress tasks into object crop, bounding-box crop, selected-object output, summary/count output, and fixed-template output.
-3. Prioritize anchor-relative crop rules where a unique marker color defines the output window.
-4. Track `validation_scope` and `candidate_count` in every manifest row so rule-derived progress is separate from fallback coverage.
-5. Promote a solver family only when it validates on all available task pairs and survives Kaggle scoring.
-
-Detailed notes:
+## 9. Detailed Notes
 
 - EDA evidence: `docs/2_eda_insights.md`
 - Baseline and submission notes: `docs/3_baseline_models.md`
+- Working plan and next steps: `docs/1_instructions.md`
 - Project rules: `docs/coding-rules.md`

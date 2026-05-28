@@ -193,6 +193,14 @@ Current baseline results:
 
 The next implementation step is to rerun the cost-aware scorer-compatible export notebook and compare the score against the `253.94` baseline.
 
+Current score-improvement priorities:
+
+1. Add exact object extraction and object selection diagnostics for the `158` object movement/selection tasks.
+2. Split the `99` crop/extract/compress tasks into object crop, bounding-box crop, selected-object output, summary/count output, and fixed-template output.
+3. Prioritize anchor-relative crop rules where a unique marker color defines the output window.
+4. Track `validation_scope` and `candidate_count` in every manifest row so rule-derived progress is separate from fallback coverage.
+5. Promote a solver family only when it validates on all available task pairs and survives Kaggle scoring.
+
 Recommended next notebook:
 
 - `notebooks/5_simple_solver_export.ipynb`
