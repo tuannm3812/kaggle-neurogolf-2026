@@ -82,10 +82,6 @@ def infer_scores_from_records(
         manifest_ts = parse_timestamp(snapshot["manifest_mtime"])
         if manifest_ts is not None:
             candidates.append(manifest_ts)
-        _, run_suffix = run_label.split(":", 1)
-        label_ts = parse_timestamp(run_suffix) if run_suffix else None
-        if label_ts is not None:
-            candidates.append(label_ts)
 
         best_match: Optional[tuple[float, float]] = None
         for submission_ts, score in timestamped_scores:
@@ -392,6 +388,9 @@ def build_track_report(
         score_overrides=score_overrides,
         window_minutes=score_match_window_minutes,
     )
+    for snapshot in snapshots:
+        mapped_score = score_overrides.get(snapshot["run_label"])
+        snapshot["public_score"] = mapped_score
 
     previous_snapshot: Optional[Dict[str, Any]] = None
 
