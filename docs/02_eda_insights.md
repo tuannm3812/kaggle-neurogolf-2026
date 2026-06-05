@@ -186,7 +186,7 @@ The immediate next notebook should therefore be solver-development oriented, not
 
 Current next-step artifact:
 
-- `notebooks/4_solver_development.ipynb` creates train-fit candidate tables for simple same-shape and shape-changing solvers.
+- `notebooks/04_solver_development.ipynb` creates train-fit candidate tables for simple same-shape and shape-changing solvers.
 - It exports `neurogolf_solver_candidate_table.csv`, `neurogolf_same_shape_solver_fits.csv`, and `neurogolf_shape_solver_fits.csv`.
 - It also writes `neurogolf_solver_development_artifacts.zip` so the candidate tables can be downloaded from Kaggle as one bundle.
 - The following notebook after that should export the highest-confidence simple same-shape solvers to ONNX, starting with background-to-single-color and global color-map candidates.
@@ -445,6 +445,6 @@ Readiness assessment:
 
 Next notebook:
 
-- `notebooks/5_simple_solver_export.ipynb` exports the first input-derived ONNX solver families.
+- `notebooks/05_simple_solver_export.ipynb` exports the first input-derived ONNX solver families.
 - It now uses the scorer-compatible one-hot `float32` tensor interface, `[1, 10, 30, 30]`, rather than raw 2D integer grids.
 - It writes only validated solved task models to `submission.zip`, matching the successful reference-submission pattern.

@@ -4,9 +4,9 @@ This document defines the working plan for the NeuroGolf 2026 solution. It cover
 
 ## 1. Competition Overview
 
-NeuroGolf 2026 asks competitors to solve ARC-AGI style image-transformation tasks with small ONNX neural networks. Each task provides a few input/output examples showing a transformation over colored integer grids. The submission must provide ONNX models that reproduce the transformation for the task inputs.
+NeuroGolf 2026 asks competitors to solve ARC-AGI style image-transformation tasks with small ONNX models. Each task provides a few input/output examples showing a transformation over colored integer grids. The submission must provide ONNX models that reproduce the transformation for each test input.
 
-Current public competition information indicates:
+Competition constraints are fixed by Kaggle scoring and validated by notebook behavior:
 
 - The task set is based on ARC-AGI public training tasks.
 - A submission is a `submission.zip` archive.
@@ -17,7 +17,6 @@ Current public competition information indicates:
 - Each ONNX file has a size limit of `1.44MB`.
 - Scoring rewards correctness and compactness. The published cost formula is `max(1, 25 - ln(cost))`, where cost combines parameters, memory footprint, and multiply-accumulate operations.
 
-Source checked: CompeteHub mirror of the Kaggle competition page, crawled 4 days before this note and summarizing the official competition page.
 
 ## 2. Core Questions
 
@@ -50,7 +49,7 @@ The project is organized around the following questions.
 - Are the model input/output names, dtypes, and shapes accepted by the evaluator?
 - Are model files below the size limit?
 - Can validation errors be isolated without blocking archive creation?
-- Which model strategy was used for each task?
+- Which model strategy was used for each task, including whether it exported successfully or was rejected?
 
 ## 3. Project Tasks
 
@@ -66,11 +65,11 @@ The project is organized around the following questions.
 
 Primary notebook:
 
-- `notebooks/1_eda.ipynb`
+- `notebooks/01_eda.ipynb`
 
 Primary notes:
 
-- `docs/2_eda_insights.md`
+- `docs/02_eda_insights.md`
 
 ### 3.2 Solver Diagnostics Tasks
 
@@ -82,28 +81,29 @@ Primary notes:
 
 Primary notebook:
 
-- `notebooks/3_solver_diagnostics.ipynb`
+- `notebooks/03_solver_diagnostics.ipynb`
 
 Next-step notebook:
 
-- `notebooks/4_solver_development.ipynb`
+- `notebooks/04_solver_development.ipynb`
 
 ### 3.3 Baseline Modeling Tasks
 
-- Generate one ONNX file per expected task.
+- Prepare task-scoped ONNX outputs aligned to the expected task roster.
 - Validate ONNX graph construction.
 - Validate runtime behavior where possible.
-- Build a complete `submission.zip`.
-- Maintain a manifest of model strategy by task.
-- Use fallback models only to guarantee structural completeness.
+- Build a valid `submission.zip` (defaulting to validated solved-task-only exports).
+- Maintain a manifest of model strategy by task with `solver_family`, `solver_kind`, `validation_scope`,
+  `candidate_count`, `train_fit`, `onnx_exported`, and `reason_rejected`.
+- Use fallback models only for compatibility experiments; keep real rule-based candidates separate in the manifest.
 
 Primary notebook:
 
-- `notebooks/2_baseline_models.ipynb`
+- `notebooks/02_baseline_models.ipynb`
 
 Primary notes:
 
-- `docs/3_baseline_models.md`
+- `docs/03_baseline_models.md`
 
 ## 4. Current Approach
 
@@ -134,7 +134,7 @@ Current baseline model families:
 Output:
 
 - `submission.zip`;
-- model manifest;
+- model manifest (`simple_logic_manifest.csv`) with solver-family metadata and rejection reasons.
 - validation table.
 
 ### 4.3 Stage 3: Implement Real Solver Families
@@ -172,10 +172,10 @@ Current EDA and diagnostics results:
 Current baseline results:
 
 - The first scorer-compatible solved-task-only submission completed successfully.
-- Public score is `253.94`.
+- Public best is `2561.08` at `2026-06-04 17:00:21` (account `tuannm3812`).
 - The accepted interface is static one-hot `float32` with shape `[1, 10, 30, 30]`.
 - The accepted archive strategy is to include only validated task models rather than invalid placeholders.
-- Versions 8 and 9 repeated the same `253.94` public score, so public-output fallback models did not improve effective leaderboard coverage.
+- Transform-library candidates dominate this baseline; current unsolved slice is mostly `external_missing`.
 - Notebook 5 now focuses on cost-aware input-derived solver export, with public-output fallback disabled by default.
 
 ## 6. Solution Principles
@@ -191,30 +191,33 @@ Current baseline results:
 
 ## 7. Next Work
 
-The next implementation step is to rerun the cost-aware scorer-compatible export notebook and compare the score against the `253.94` baseline.
+The next implementation step is to rerun the cost-aware scorer-compatible export notebook and compare the score against the `2561.08` baseline.
 
 Current score-improvement priorities:
 
-1. Add exact object extraction and object selection diagnostics for the `158` object movement/selection tasks.
-2. Split the `99` crop/extract/compress tasks into object crop, bounding-box crop, selected-object output, summary/count output, and fixed-template output.
-3. Prioritize anchor-relative crop rules where a unique marker color defines the output window.
-4. Track `validation_scope` and `candidate_count` in every manifest row so rule-derived progress is separate from fallback coverage.
-5. Promote a solver family only when it validates on all available task pairs and survives Kaggle scoring.
+1. Fix external-transform dependency and mount coverage, then rerun notebook 5.
+2. Add exact object extraction and object selection diagnostics for the `158` object movement/selection tasks.
+3. Split the `99` crop/extract/compress tasks into object crop, bounding-box crop, selected-object output, summary/count output, and fixed-template output.
+4. Prioritize anchor-relative crop rules where a unique marker color defines the output window.
+5. Track `solver_family`, `validation_scope`, `candidate_count`, `train_fit`, `onnx_exported`, and `reason_rejected`
+   in every manifest row so rule-derived progress is separate from fallback coverage.
+6. Promote a solver family only when it validates on all available task pairs and survives Kaggle scoring.
 
 Recommended next notebook:
 
-- `notebooks/5_simple_solver_export.ipynb`
+- `notebooks/05_simple_solver_export.ipynb`
 
 Expected output:
 
-- `submission.zip`
-- `simple_logic_manifest.csv`
+- `submission.zip` (written to `artifacts/submission/local-runs/<run_id>/submission.zip`)
+- `simple_logic_manifest.csv` (written to `artifacts/submission/local-runs/<run_id>/simple_logic_manifest.csv`)
 - task-level solver-family counts in the notebook output
-- `candidate_count` and `validation_scope` fields in the manifest
+- `solver_family`, `solver_kind`, `validation_scope`, `candidate_count`, `train_fit`, `onnx_exported`, and
+  `reason_rejected` in the manifest
 
 Score plateau triage:
 
-- `notebooks/6_score_plateau_triage.ipynb`
+- `notebooks/06_score_plateau_triage.ipynb`
 - compare one or more `simple_logic_manifest.csv` files from Kaggle output datasets;
 - identify whether new solver families selected any task ids;
 - render newly added or dynamic-crop task panels;
@@ -222,14 +225,14 @@ Score plateau triage:
 
 Supporting diagnostics:
 
-- `notebooks/4_solver_development.ipynb`
+- `notebooks/04_solver_development.ipynb`
 
 Supporting diagnostic artifacts:
 
-- `neurogolf_solver_candidate_table.csv`
-- `neurogolf_same_shape_solver_fits.csv`
-- `neurogolf_shape_solver_fits.csv`
-- `neurogolf_solver_development_artifacts.zip`
+- `neurogolf_solver_candidate_table.csv` (`artifacts/analysis/`)
+- `neurogolf_same_shape_solver_fits.csv` (`artifacts/analysis/`)
+- `neurogolf_shape_solver_fits.csv` (`artifacts/analysis/`)
+- `neurogolf_solver_development_artifacts.zip` (`artifacts/analysis/`)
 
 Recommended first solver targets:
 
@@ -274,8 +277,8 @@ Expected result:
 Expected artifact:
 
 - `submission.zip`
-- `simple_solver_manifest.csv`
-- `simple_solver_validation.csv`
+- `simple_logic_manifest.csv`
+- solver-family validation summaries from notebook output
 
 ### 8.3 Implement Object-Level Solvers
 
@@ -319,4 +322,39 @@ Replacement criteria:
 - solver output is derived from input;
 - exported ONNX validates locally;
 - file size is below the competition limit;
-- manifest records the solver family and validation status.
+- manifest records the solver family, validation scope, and rejection reason for each task.
+
+## 9. Kaggle Submission Flow
+
+- Keep Kaggle credentials available to the CLI:
+  - `KAGGLE_CONFIG_DIR=~/Downloads` (or your folder containing `kaggle.json`).
+- Run `notebooks/05_simple_solver_export.ipynb` in Kaggle with:
+  - `TRANSFORM_LIBRARY_DIR` or `TRANSFORM_LIBRARY_PATH` pointing to a directory that contains:
+    - `simple_logic_onnx/task*.onnx`, or
+    - nested `**/submission/task*.onnx` files.
+  - Optional: set `TASK_DIR` for local runs if not using default Kaggle mount.
+- Push/update the kernel:
+  - `KAGGLE_CONFIG_DIR=~/Downloads kaggle kernels push -p .`
+- Pull fresh output after run:
+  - `KAGGLE_CONFIG_DIR=~/Downloads kaggle kernels output <kernel-slug> -p /tmp/neurogolf-export -o`
+- Package verification:
+  - confirm `simple_logic_manifest.csv` exists in output zip.
+  - verify `submission.zip` includes only solved tasks you intend to submit.
+
+## 10. Agent-Driven Score Loop
+
+Use `scripts/agents/neurogolf_agents.py` to enforce a predictable improvement cycle:
+
+- `score`: pull latest Kaggle submission list and best public score.
+- `report`: print or write a combined score + manifest summary.
+- `compare`: show recovered task IDs between manifest versions.
+- `track`: aggregate versions and emit keep/change lessons for each run.
+
+Suggested cycle:
+
+1. Push notebook 5 once complete and wait for Kaggle run completion.
+2. Pull kernel output to a local directory.
+3. Run `report` with the pulled manifest.
+4. Run `track` to append run summaries to history and capture keep/change notes.
+5. Fix the highest-frequency rejection reason first (`external_missing` is currently dominant).
+6. Re-run and then run `compare` against prior manifest for a hard win metric.

@@ -45,7 +45,8 @@ Our project goals are:
 | Shape behavior | `262` same-area tasks, `138` shape-changing tasks |
 | Palette behavior | `176` same-palette, `224` palette-changing tasks |
 | Simple solver slice | `62` same-shape candidates, `4` simple shape-changing candidates |
-| First valid public score | `253.94` |
+| Best known public score | `2561.08` |
+| Latest export run | `289 / 400` ONNX models exported (`111` unsolved) |
 | Current plateau | Additional internal coverage has not yet moved public score |
 
 Solver-development routing:
@@ -75,9 +76,10 @@ Completed:
 
 Current result:
 
-- Public score: `253.94`.
-- Repeated versions with fallback and additional simple solvers stayed at `253.94`.
-- Learned `5x5` convolution improved internal validation from `60` to `62` tasks, but did not improve public score.
+- Best known public score: `2561.08`.
+- Latest export baseline: `289` exported models, `111` unsolved, using solved-task strategy.
+- Repeated same-shape and fallback-only variations did not improve public score after this run.
+- Learned `5x5` convolution did not materially improve public score in this run.
 - The next score-improvement direction is object-level reasoning rather than more same-shape local filters.
 
 ## 5. Lessons Learned
@@ -95,24 +97,38 @@ Current result:
 
 ```text
 .
+├── .gitignore
 ├── README.md
+├── scripts/
+│   ├── clean_notebook_outputs.py
+│   └── agents/
+│       └── neurogolf_agents.py
 ├── docs/
 │   ├── 1_instructions.md
 │   ├── 2_eda_insights.md
 │   ├── 3_baseline_models.md
 │   ├── assets/
-│   ├── coding-rules.md
+│   ├── 06_coding_rules.md
+│   └── 4_agent_workflow.md
 │   └── figures/
-└── notebooks/
+├── notebooks/
     ├── 1_eda.ipynb
     ├── 2_baseline_models.ipynb
     ├── 3_solver_diagnostics.ipynb
     ├── 4_solver_development.ipynb
     ├── 5_simple_solver_export.ipynb
     └── 6_score_plateau_triage.ipynb
+└── artifacts/ (gitignored)
+    ├── submission/
+    │   ├── local-runs/
+    │   └── kaggle-runs/
+    ├── eda/
+    ├── analysis/
+    └── data/
 ```
 
-The repository is intentionally notebook-first. Kaggle notebooks are the executable source of truth; `docs/` captures interpretation, results, and project decisions.
+The repository is intentionally notebook-first. Kaggle notebooks are the executable source of truth; `docs/` captures interpretation, results, and project decisions.  
+`artifacts/` is used for local working outputs and is intentionally kept out of git.
 
 ## 7. Notebook Workflow
 
@@ -125,7 +141,7 @@ The repository is intentionally notebook-first. Kaggle notebooks are the executa
 | `5_simple_solver_export.ipynb` | Scorer-compatible ONNX export | Generates rule-derived and score-oriented task models |
 | `6_score_plateau_triage.ipynb` | Score plateau diagnosis | Compares manifests, isolates new coverage, and renders review panels |
 
-Detailed run instructions and next work live in [docs/1_instructions.md](docs/1_instructions.md).
+Detailed run instructions and next work live in [docs/01_instructions.md](docs/01_instructions.md).
 
 ## 8. Technical Skills
 
@@ -140,7 +156,7 @@ Detailed run instructions and next work live in [docs/1_instructions.md](docs/1_
 
 ## 9. Detailed Notes
 
-- EDA evidence: `docs/2_eda_insights.md`
-- Baseline and submission notes: `docs/3_baseline_models.md`
-- Working plan and next steps: `docs/1_instructions.md`
-- Project rules: `docs/coding-rules.md`
+- EDA evidence: `docs/02_eda_insights.md`
+- Baseline and submission notes: `docs/03_baseline_models.md`
+- Working plan and next steps: `docs/01_instructions.md`
+- Project rules: `docs/06_coding_rules.md`

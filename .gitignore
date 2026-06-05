@@ -1,0 +1,23 @@
+# Local artifacts and generated files
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+.venv*/
+*.egg-info/
+
+# Workspace data and experiment outputs
+artifacts/
+input
+*.log
+simple_logic_manifest.csv
+submission.zip
+simple_logic_onnx/
+neurogolf-*.zip
+neurogolf_shape_solver_fits.csv
+neurogolf_same_shape_solver_fits.csv
+neurogolf_solver_candidate_table.csv
+neurogolf_solver_development_artifacts.zip

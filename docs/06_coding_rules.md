@@ -9,22 +9,25 @@ Keep the root small:
 - `notebooks/` for Kaggle notebooks.
 - `docs/` for reports, results, and supporting EDA artifacts.
 - `README.md` for the high-level project overview.
+- `artifacts/` for generated run artifacts (manifests, submission packages, ONNX files, logs), kept in `.gitignore`.
+- `.gitignore` for all generated and local-only files.
+- `scripts/` for repo maintenance helpers.
 
-Avoid adding local-only folders such as `data/`, `models/`, `outputs/`, `configs/`, or `scripts/` unless the project direction changes back to local training.
+Keep local-only generated folders local-only. Commit only the artifacts that directly document reasoning or reproducible benchmark decisions.
 
 ## 2. Artifact Naming
 
 Use numbered, stable names without zero padding:
 
-- `docs/1_instructions.md`
-- `docs/2_eda_insights.md`
-- `docs/3_baseline_models.md`
-- `notebooks/1_eda.ipynb`
-- `notebooks/2_baseline_models.ipynb`
-- `notebooks/3_solver_diagnostics.ipynb`
-- `notebooks/4_solver_development.ipynb`
-- `notebooks/5_simple_solver_export.ipynb`
-- `notebooks/6_score_plateau_triage.ipynb`
+- `docs/01_instructions.md`
+- `docs/02_eda_insights.md`
+- `docs/03_baseline_models.md`
+- `notebooks/01_eda.ipynb`
+- `notebooks/02_baseline_models.ipynb`
+- `notebooks/03_solver_diagnostics.ipynb`
+- `notebooks/04_solver_development.ipynb`
+- `notebooks/05_simple_solver_export.ipynb`
+- `notebooks/06_score_plateau_triage.ipynb`
 
 Notebook names should describe the actual Kaggle workflow. Do not split model generation and submission packaging into separate notebooks when the competition flow is meant to run end-to-end.
 
@@ -73,7 +76,17 @@ Prefer readable, self-contained notebook code over imports from local project mo
 
 Keep analysis prose out of code cells. Use markdown cells for interpretation; use code cells for computation, plotting, validation, and explicit report-asset generation.
 
-When notebook code changes, clear all outputs and execution counts before committing. Do not clear outputs for documentation-only, review-only, or insight-summary changes.
+Notebook output policy:
+
+- Keep notebook outputs committed when executable logic is unchanged.
+- Clear all outputs and execution counts before committing when you changed runnable code and retrained/reran on Kaggle.
+- Add outputs back only after the run is intentionally reviewed and stabilized.
+
+Use this helper to keep the rule consistent:
+
+- `python3 scripts/clean_notebook_outputs.py` clears outputs only for notebooks with code changes versus `HEAD`.
+- `python3 scripts/clean_notebook_outputs.py --all notebooks/04_solver_development.ipynb` clears one notebook only.
+- `python3 scripts/clean_notebook_outputs.py notebooks/*.ipynb` clears changed notebooks across a set.
 
 Competition notebooks should not depend on internet access during final reruns. For runtime packages that differ from the Kaggle image, prefer attached wheelhouse datasets when finalizing. Exploratory installs are allowed only behind explicit configuration or in a clearly labeled dependency setup cell.
 
