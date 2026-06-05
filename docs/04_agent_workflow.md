@@ -20,6 +20,39 @@ the Kaggle score quickly.
 - `track`  
   tracks multiple manifest versions into a versioned ledger and summarizes keep/change lessons.
 
+## Commit protocol for agent functions
+
+Use one commit per completed function run when outputs changed:
+
+- Commit message format: `<type>(agent/<function>): <summary>`
+  - `type` follows conventional commit (`chore`, `feat`, `fix`, `docs`, `refactor`, etc.).
+  - `summary` is one concise imperative phrase describing the user-visible change.
+- Update any generated evidence files for that function and include the exact file list in the commit body if multiple files are changed.
+- Never commit raw Kaggle artifacts, local caches, or unreviewed notebook outputs.
+
+Function-specific reminders:
+
+- `score`
+  - No code changes expected.
+  - Usually no commit unless a new automation artifact is added intentionally.
+- `report`
+  - Commit only report outputs (`docs/*_report*.md`, evidence notes) and minimal metadata updates.
+  - Use `chore(agent/report): add latest score report`.
+- `compare`
+  - Commit manifest delta artifacts and rationale notes when the diff is used for planning.
+  - Use `docs(agent/compare):` prefix when only docs change.
+- `track`
+  - Commit versioned history outputs when new run evidence is accepted.
+  - Use `chore(agent/track): update run ledger`.
+
+Notebook / experiment hygiene around any agent cycle:
+
+1. Clean notebook outputs for changed run files using
+   `python3 scripts/clean_notebook_outputs.py` unless the run is intentionally committed with reviewed outputs.
+2. Stage only files changed by the agent function.
+3. Review diff for scope and relevance.
+4. Commit and push with a message that includes the active function name.
+
 ## Current priority from this report
 
 As of the latest pulled run (`/private/tmp/neurogolf-kaggle-3812-latest`):

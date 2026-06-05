@@ -125,3 +125,20 @@ Do not commit:
 - ad hoc experiment dumps.
 
 Commit lightweight artifacts only when they directly support the written analysis, such as figures used by EDA markdown and model result pages.
+
+### 7.1 Agent commit protocol (for delegated function runs)
+
+- Use conventional commit format: `<type>(agent/<function>): <summary>`.
+- Keep function scope tight: commit only the files produced or edited by that agent function.
+- If no durable artifact was produced, no commit is required.
+- When documentation is generated (for example `report`, `compare`, `track`), prefer `docs/` and `artifacts/analysis/` references over code churn.
+- For notebook edits, ensure outputs are cleaned or explicitly reviewed before commit.
+
+Example mapping:
+
+| Function | Commit scope | Example message |
+| --- | --- | --- |
+| `score` | usually none, optionally log snapshots | `docs(agent/score): add latest score snapshot note` |
+| `report` | `docs/*_report*.md` | `docs(agent/report): archive latest score diagnostics` |
+| `compare` | manifest deltas + notes | `docs(agent/compare): add run comparison delta` |
+| `track` | history and tracked summary docs | `chore(agent/track): append run ledger entry` |
