@@ -1,5 +1,35 @@
 # NeuroGolf Version Track
 
+## How to update scores in this track
+
+Use this flow after each Kaggle run:
+
+1. (Optional quick check) inspect live leaderboard run history:
+
+```bash
+python3 scripts/agents/neurogolf_agents.py score --competition neurogolf-2026 --account tuannm3812
+```
+
+2. Refresh local run tracking with auto score matching:
+
+```bash
+python3 scripts/agents/neurogolf_agents.py track \
+  --auto-score \
+  --account tuannm3812 \
+  --history artifacts/analysis/neurogolf_run_history.csv \
+  --output docs/05_agent_score_track.md \
+  artifacts/submission/kaggle-runs
+```
+
+3. If `--auto-score` misses a run score (rare in burst submissions), add an override row in `artifacts/analysis/score_by_run.csv`:
+
+```csv
+run_label,public_score
+kaggle-runs:2026-06-04-0650,2561.08
+```
+
+Then rerun `track` with `--score-log artifacts/analysis/score_by_run.csv`.
+
 ## Run ledger
 
 | run | manifest time | score | exported | unsolved | Δexported | recovered | dominant family | notes |

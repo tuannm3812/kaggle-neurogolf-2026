@@ -105,6 +105,20 @@ python3 scripts/agents/neurogolf_agents.py track \
   --output docs/05_agent_score_track.md
 ```
 
+- Track selected run versions and auto-fetch recent Kaggle scores:
+
+```bash
+python3 scripts/agents/neurogolf_agents.py track \
+  /path/to/run-14/simple_logic_manifest.csv \
+  /path/to/run-15/simple_logic_manifest.csv \
+  --auto-score \
+  --account tuannm3812 \
+  --history artifacts/analysis/neurogolf_run_history.csv \
+  --output docs/05_agent_score_track.md
+```
+
+When `--auto-score` is enabled, the script aligns Kaggle submission times to kaggle run timestamps and fills unknown scores automatically. Review output for any mismatch if runs were submitted in burst mode.
+
 - Compare two manifest runs:
 
 ```bash

@@ -19,6 +19,7 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
+from datetime import datetime
 
 
 DEFAULT_KAGGLE_BIN = shutil.which("kaggle") or "/Users/tuanm.nguyen/Library/Python/3.9/bin/kaggle"
@@ -34,6 +35,68 @@ def parse_bool(value: Any) -> bool:
         return bool(int(value))
     text = str(value).strip().lower()
     return text in {"1", "true", "yes", "y"}
+
+
+def parse_timestamp(text: str) -> Optional[float]:
+    """Parse common agent timestamps from CLI/manifests."""
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d-%H%M"):
+        try:
+            return datetime.strptime(text.strip(), fmt).timestamp()
+        except ValueError:
+            continue
+    return None
+
+
+def infer_scores_from_records(
+    snapshots: list[Dict[str, Any]],
+    submissions: List[SubmissionRecord],
+    score_overrides: Dict[str, float] | None = None,
+    window_minutes: int = 90,
+) -> Dict[str, float]:
+    """Attach public scores to tracks when labels are time-adjacent to submissions."""
+    if not snapshots or not submissions:
+        return score_overrides or {}
+
+    window = max(1, window_minutes) * 60
+    timestamped_scores = []
+    for submission in submissions:
+        score = submission.public_score
+        if score is None:
+            continue
+        submission_ts = parse_timestamp(submission.date)
+        if submission_ts is None:
+            continue
+        timestamped_scores.append((submission_ts, score))
+    if not timestamped_scores:
+        return score_overrides or {}
+
+    overrides = dict(score_overrides or {})
+    for snapshot in snapshots:
+        run_label = snapshot["run_label"]
+        if run_label in overrides:
+            continue
+        if not run_label.startswith("kaggle-runs:"):
+            continue
+
+        candidates = []
+        manifest_ts = parse_timestamp(snapshot["manifest_mtime"])
+        if manifest_ts is not None:
+            candidates.append(manifest_ts)
+        _, run_suffix = run_label.split(":", 1)
+        label_ts = parse_timestamp(run_suffix) if run_suffix else None
+        if label_ts is not None:
+            candidates.append(label_ts)
+
+        best_match: Optional[tuple[float, float]] = None
+        for submission_ts, score in timestamped_scores:
+            for candidate_ts in candidates:
+                delta = abs(submission_ts - candidate_ts)
+                if delta <= window and (best_match is None or delta < best_match[0]):
+                    best_match = (delta, score)
+        if best_match is not None:
+            overrides[run_label] = best_match[1]
+
+    return overrides
 
 
 @dataclass(frozen=True)
@@ -287,6 +350,8 @@ def write_history(path: Path, rows: list[Dict[str, str]]) -> None:
 def build_track_report(
     runs: list[Path],
     score_overrides: Dict[str, float] | None = None,
+    auto_score_records: List[SubmissionRecord] | None = None,
+    score_match_window_minutes: int = 90,
 ) -> tuple[str, list[Dict[str, str]]]:
     rows = []
     snapshots = []
@@ -321,6 +386,13 @@ def build_track_report(
         snapshots.append(snapshot)
 
     snapshots.sort(key=lambda row: row["mtime_epoch"])
+    score_overrides = infer_scores_from_records(
+        snapshots=snapshots,
+        submissions=auto_score_records or [],
+        score_overrides=score_overrides,
+        window_minutes=score_match_window_minutes,
+    )
+
     previous_snapshot: Optional[Dict[str, Any]] = None
 
     lines: list[str] = []
@@ -437,10 +509,17 @@ def run_track(
     output_path: str = "",
     history_path: str = "",
     score_log: str = "",
+    auto_score_records: List[SubmissionRecord] | None = None,
+    score_match_window_minutes: int = 90,
 ) -> str:
     manifests = discover_manifests(run_inputs)
     score_overrides = parse_score_log(Path(score_log)) if score_log else {}
-    report, history_rows = build_track_report(manifests, score_overrides)
+    report, history_rows = build_track_report(
+        manifests,
+        score_overrides=score_overrides,
+        auto_score_records=auto_score_records,
+        score_match_window_minutes=score_match_window_minutes,
+    )
 
     if history_path:
         previous = read_history(Path(history_path))
@@ -588,6 +667,12 @@ def parse_args() -> argparse.Namespace:
         nargs="*",
         help="Manifest paths or directories. If omitted, scans artifacts/submission/local-runs and kaggle-runs.",
     )
+    track_parser.add_argument("--auto-score", action="store_true", help="Fetch latest kaggle scores and auto-match by run timestamp.")
+    track_parser.add_argument("--competition", default=DEFAULT_COMPETITION)
+    track_parser.add_argument("--account", default=None)
+    track_parser.add_argument("--config-dir", default="/Users/tuanm.nguyen/Downloads")
+    track_parser.add_argument("--kaggle-bin", default=DEFAULT_KAGGLE_BIN)
+    track_parser.add_argument("--score-match-window-minutes", type=int, default=90)
     track_parser.add_argument("--output", default="")
     track_parser.add_argument("--history", default="")
     track_parser.add_argument("--score-log", default="")
@@ -610,11 +695,26 @@ def main() -> int:
         return 0
 
     if command == "track":
+        auto_records: List[SubmissionRecord] = []
+        if args.auto_score:
+            try:
+                auto_records = fetch_kaggle_submissions(
+                    competition=args.competition,
+                    account=args.account,
+                    config_dir=Path(args.config_dir),
+                    kaggle_bin=args.kaggle_bin,
+                    limit=20,
+                )
+            except Exception as exc:
+                print(f"auto score fetch failed: {exc}")
+                print("continuing without auto score mapping")
         output = run_track(
             run_inputs=getattr(args, "runs", []),
             output_path=getattr(args, "output", ""),
             history_path=getattr(args, "history", ""),
             score_log=getattr(args, "score_log", ""),
+            auto_score_records=auto_records,
+            score_match_window_minutes=getattr(args, "score_match_window_minutes", 90),
         )
         print(output)
         return 0
