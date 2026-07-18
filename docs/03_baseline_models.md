@@ -25,31 +25,74 @@ Required interface (scorer compatible):
 
 No code changes in this pass changed solver behavior; this refinement pass focused on notebook clarity and output documentation.
 
-## 3) Latest Run Summary (2026-06-04)
+## 3) Latest Run Summary
 
-From the latest downloaded notebook output (`/tmp/neurogolf14-output/simple_logic_manifest.csv`):
+### 2026-06-04 (kaggle-runs:2026-06-04-0650)
+
+From `artifacts/submission/kaggle-runs/2026-06-04-0650/simple_logic_manifest.csv`:
 
 - Loaded tasks: `400`
-- Exported (`onnx_exported=True`): `289`
-- Unsolved (`onnx_exported=False`): `111`
-- Local solver coverage:
-  - `50` `background_to_single_color`
-  - `37` `spatial_gather`
-  - `4` `global_color_map`
-  - `1` `object_crop` (`dynamic_anchor_crop`)
-- External transform-library coverage:
-  - `197` `external_transform_library`
+- Exported (`onnx_exported=True`): `270`
+- Unsolved (`onnx_exported=False`): `130` (all `external_missing`)
+- Public score: `2561.08` (`SubmissionStatus.COMPLETE`)
+- Solver mix: `228` external, `37` spatial_gather, `4` global_color_map, `1` object_crop
 
-Total exported models: `50 + 37 + 4 + 1 + 197 = 289`
+### 2026-06-09 (manual v9 submit — failed)
 
-## 4) What This Means
+From pulled v9 kernel output (`tuannm3812/neurogolf-2026-simple-logic-solver-export-v9`):
 
-- The external transform library has become a practical fallback and currently dominates solved coverage.
-- There is no longer an all-task completed baseline; `111` tasks remain unsolved by this notebook revision.
-- Public-output fallback is still available but remains disabled by default in this workflow.
-- Score-relevant progress will now come from improving dynamic/object-centric families, not from formatting cleanup.
+- Manifest rows: `400 / 400 exported`
+- ONNX files in archive: `400`
+- Public score: none (`SubmissionStatus.ERROR`)
+- Root cause: `58` tasks had scorer-incompatible ONNX (dynamic shapes, ORT load failures, unsupported ops)
+- Lesson: manifest export count ≠ scorer-safe archive; never manual-submit unfiltered kernel output
 
-## 5) Current Solver Families in the Notebook
+### Score reference bands
+
+| Score | Meaning | Archive behavior |
+| ---: | --- | --- |
+| `253.94` | Valid format, minimal coverage | Early baselines |
+| `2561.08` | `270` validated tasks, 130 missing external | Solved-only, safe |
+| `2949–3068` | Transform library mounted, validated subset | Solved-only, stable plateau |
+| `3133–3235` | Best external-library coverage | Solved-only, peak |
+| `ERROR` | Scorer rejected archive | Complete or unvalidated archive |
+
+## 4) Archive Policy
+
+Default export policy is **solved-task-only**:
+
+- include a task in `submission.zip` only when it passes the pre-export validation gate;
+- keep unsolved tasks in the manifest with `onnx_exported=False` and `reason_rejected`;
+- never add invalid placeholders to reach `400 / 400` file count;
+- keep `EXPORT_PUBLIC_OUTPUT_FALLBACK = False` unless running an explicit fallback experiment.
+
+Competition-linked kernels auto-submit `/kaggle/working/submission.zip`. Pulled output is for triage and manifest comparison only.
+
+## 5) Pre-Export Validation Gate
+
+Reject a candidate model before writing it to the submission archive when any check fails:
+
+| Check | Requirement |
+| --- | --- |
+| Input name / output name | `input` / `output` |
+| Dtype | `float32` |
+| Shape | exactly `[1, 10, 30, 30]` (no `0` dimensions) |
+| Banned ops | none of `Loop`, `Scan`, `NonZero`, `Unique`, `Script`, `Function` |
+| IR version | `<= 9` for external-library imports |
+| ORT load | CPU `InferenceSession` initializes |
+| Pair fit | all available train and public test pairs pass inference |
+| Size | `< 1.44MB` per task file |
+
+Record rejection in `reason_rejected` rather than silently dropping the row from the manifest.
+
+## 6) What This Means
+
+- The external transform library dominates solved coverage when mounted correctly.
+- More exported tasks only help when every added task passes the scorer validation gate.
+- Public-output fallback remains disabled by default.
+- Score-relevant progress comes from validated coverage and local solver families, not archive completeness alone.
+
+## 7) Current Solver Families in the Notebook
 
 - `background_to_single_color`
 - `global_color_map` (1x1 mapping)
@@ -65,7 +108,7 @@ Total exported models: `50 + 37 + 4 + 1 + 197 = 289`
 - `learned_conv_{1x1,3x3,5x5}` (feature-flagged)
 - `external_transform_library` (runtime-selected, validated candidate models)
 
-## 6) Manifest and Debugging
+## 8) Manifest and Debugging
 
 `simple_logic_manifest.csv` is the control surface for validation and debugging.
 
@@ -90,7 +133,7 @@ Use this manifest to answer:
 - Which family was cheapest for a given task?
 - Are rejected candidates failing local validation, ONNX validation, or size constraints?
 
-## 7) Current Working Assumption
+## 9) Current Working Assumption
 
 The score plateaus previously seen with same-shape-only improvements indicate the next gains are likely in:
 
@@ -100,9 +143,10 @@ The score plateaus previously seen with same-shape-only improvements indicate th
 
 The priority is to convert the largest unresolved slices first, then re-run scoreplateau triage in `notebooks/06_score_plateau_triage.ipynb`.
 
-## 8) Historical Notes
+## 10) Historical Notes
 
 - Early versions (5–10) validated core scoring compatibility of the fixed one-hot interface and complete submission packaging.
 - Mid revisions with geometric/crop/learned additions moved local candidate diversity but did not show public-score lift relative to earlier baselines.
 - Solver quality tracking was improved by adding cost ranking, `reason_rejected`, and source attribution in the manifest.
+- The `2026-06-09` v9 manual submit confirmed that unfiltered `400 / 400` exports can fail scorer validation even when the manifest looks complete.
 

@@ -45,9 +45,9 @@ Our project goals are:
 | Shape behavior | `262` same-area tasks, `138` shape-changing tasks |
 | Palette behavior | `176` same-palette, `224` palette-changing tasks |
 | Simple solver slice | `62` same-shape candidates, `4` simple shape-changing candidates |
-| Best known public score | `2561.08` |
-| Latest export run | `289 / 400` ONNX models exported (`111` unsolved) |
-| Current plateau | Additional internal coverage has not yet moved public score |
+| Best known public score | `3235.97` (all-time); active leaderboard `2561.08` |
+| Latest export run | `270 / 400` validated on active run; v9 manifest reached `400 / 400` but manual submit `ERROR` |
+| Current plateau | Recover via notebook auto-submit; do not manual-submit pulled kernel output |
 
 Solver-development routing:
 
@@ -76,17 +76,18 @@ Completed:
 
 Current result:
 
-- Best known public score: `2561.08`.
-- Latest export baseline: `289` exported models, `111` unsolved, using solved-task strategy.
-- Repeated same-shape and fallback-only variations did not improve public score after this run.
-- Learned `5x5` convolution did not materially improve public score in this run.
-- The next score-improvement direction is object-level reasoning rather than more same-shape local filters.
+- All-time best public score: `3235.97`; stable plateau: `3068.97`; active leaderboard: `2561.08`.
+- Latest export baseline on active run: `270` validated tasks, `130` unsolved (`external_missing`).
+- A `2026-06-09` manual v9 submit failed with `ERROR` (400-file archive, 58 scorer-incompatible ONNX).
+- Submission strategy is notebook-first: competition kernels auto-submit; see [docs/01_instructions.md](docs/01_instructions.md) Section 9.
+- The next score-improvement direction is recover the `3068` kernel baseline, then expand with validated solved-task-only export.
 
 ## 5. Lessons Learned
 
 - Kaggle scorer compatibility matters as much as local ONNX Runtime validation. Raw 2D `int64` grid models can run locally and still fail the scorer.
 - The accepted pattern is a static one-hot `float32` interface with shape `[1, 10, 30, 30]`.
 - A solved-task-only archive is safer than a complete archive filled with weak or invalid placeholders.
+- Submit only through competition-linked notebooks; manual CLI submit of downloaded kernel output caused a `2026-06-09` `ERROR` despite a `400 / 400` manifest.
 - Public-output fallback models can make an archive look more complete without improving effective leaderboard score.
 - Train-fit is not enough. Solvers need public-test validation and manifest-level tracking to avoid false confidence.
 - Simple global rules explain only a small slice of the benchmark.
@@ -157,6 +158,8 @@ Detailed run instructions and next work live in [docs/01_instructions.md](docs/0
 ## 9. Detailed Notes
 
 - EDA evidence: `docs/02_eda_insights.md`
-- Baseline and submission notes: `docs/03_baseline_models.md`
-- Working plan and next steps: `docs/01_instructions.md`
+- Working plan and notebook-first submission strategy: `docs/01_instructions.md` (Section 9)
+- Baseline, validation gate, and submission notes: `docs/03_baseline_models.md`
+- Score history and keep/change decisions: `docs/05_agent_score_track.md`
+- Agent workflow: `docs/04_agent_workflow.md`
 - Project rules: `docs/06_coding_rules.md`

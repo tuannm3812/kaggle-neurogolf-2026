@@ -10,6 +10,7 @@ __pycache__/
 *.egg-info/
 
 # Workspace data and experiment outputs
+.kaggle/
 artifacts/
 input
 *.log

@@ -8,6 +8,31 @@ the Kaggle score quickly.
 - Score plateaus can be misleading without manifest context.
 - Public score improvements only come from tasks solved by actual train-fit rules, not placeholders.
 - External-transform candidates are currently the largest coverage slice; we need fast checks to detect exactly where they fail and what to build next.
+- Submission status (`COMPLETE` vs `ERROR`) matters as much as exported task count.
+
+## Submission rule: notebook-first
+
+- **Submit the notebook run**, not a locally downloaded zip.
+- After `kernels push` completes, run:
+  ```bash
+  kaggle competitions submit -c neurogolf-2026 \
+    -k tuannm3812/neurogolf-2026-simple-logic-solver \
+    -f submission.zip \
+    -v <kernel-version> \
+    -m "Notebook export run"
+  ```
+- `-f submission.zip` is the **kernel output filename**, not a local path.
+- **Do not** run `competitions submit -f /path/to/submission.zip`.
+
+Why: local zip uploads caused a `2026-06-09` `ERROR` when v9 exported scorer-incompatible models. Notebook output submit via `-k ... -f submission.zip` is the supported code-competition path.
+
+Orchestration script:
+
+```bash
+KAGGLE_CONFIG_DIR=~/Downloads ./scripts/run_kaggle_export.sh
+```
+
+Strategy details: `docs/01_instructions.md` Section 9.
 
 ## Agents implemented in `scripts/agents/neurogolf_agents.py`
 
@@ -55,16 +80,13 @@ Notebook / experiment hygiene around any agent cycle:
 
 ## Current priority from this report
 
-As of the latest pulled run (`/private/tmp/neurogolf-kaggle-3812-latest`):
+As of the latest evidence:
 
-- Total tasks in manifest: `400`
-- Exported: `289`
-- Unsolved: `111`
-- Dominant resolved family: `external_transform_library`
-- Current unresolved reason pattern: `external_missing:*`
-
-That means the immediate priority is to stabilize external model discovery and
-coverage before large new solver families can move the public score.
+- Active leaderboard score: `2561.08` (`270` exported, `130` external_missing).
+- All-time best score: `3235.97`; stable plateau: `3068.97`.
+- Latest submit attempt (`2026-06-09` manual v9 CLI): `SubmissionStatus.ERROR`.
+- Immediate action: re-run the recovery kernel (`neurogolf-2026-simple-logic-solver`) via notebook auto-submit, not manual zip upload.
+- Before using v9 expansion: enforce pre-export validation gate documented in `docs/03_baseline_models.md`.
 
 ## Command examples
 
@@ -130,12 +152,13 @@ python3 scripts/agents/neurogolf_agents.py compare \
 
 ## Nightly score-improvement schedule
 
-1. Push notebook (or run automatically on Kaggle).
-2. Pull kernel output and keep `simple_logic_manifest.csv`.
-3. Run `report` and archive the report.
-4. If unresolved reasons are mostly `external_missing`, fix transform-library
-   discovery/path mounting first.
-5. Otherwise, promote one solver family into notebook 5, rerun, and compare manifests.
+1. Push the competition export kernel (or run `./scripts/run_kaggle_export.sh`).
+2. Confirm auto-submission status is `COMPLETE` via `competitions submissions`.
+3. Pull kernel output for triage only; keep `simple_logic_manifest.csv` (do not re-submit the pulled zip).
+4. Run `report` and archive the report.
+5. If status is `ERROR`, revert archive policy and tighten pre-export validation.
+6. If unresolved reasons are mostly `external_missing`, fix transform-library discovery/path mounting first.
+7. Otherwise, promote one solver family into the export notebook, rerun the kernel, and compare manifests.
 
 ## Lessons rulebook (keep vs change)
 
@@ -149,6 +172,7 @@ python3 scripts/agents/neurogolf_agents.py compare \
 
 ## Exit criteria for each iteration
 
-- Manifest shows non-zero task recovery.
-- New run writes the manifest and `submission.zip` with explicit solver-source tags.
+- Submission status is `COMPLETE`, not `ERROR`.
+- Manifest shows non-zero task recovery when targeting expansion.
+- New kernel run writes the manifest with explicit solver-source tags and rejection reasons.
 - Public score improves versus previous successful submission.

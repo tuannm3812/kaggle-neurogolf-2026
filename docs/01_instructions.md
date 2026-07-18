@@ -172,11 +172,14 @@ Current EDA and diagnostics results:
 Current baseline results:
 
 - The first scorer-compatible solved-task-only submission completed successfully.
-- Public best is `2561.08` at `2026-06-04 17:00:21` (account `tuannm3812`).
+- All-time best public score is `3235.97` at `2026-06-04 05:45:01` (261 external-transform candidates).
+- Stable plateau score is `3068.97` (v4 ranked crop + transform lib fixes; three COMPLETE runs).
+- Current active leaderboard score is `2561.08` at `2026-06-04 17:00:21` (270 validated tasks, 130 `external_missing`).
+- Latest submission attempt (`2026-06-09`) failed with `SubmissionStatus.ERROR`: a manually submitted v9 archive had `400` manifest rows but `58` scorer-incompatible ONNX files (dynamic shapes, ORT load failures, unsupported ops).
 - The accepted interface is static one-hot `float32` with shape `[1, 10, 30, 30]`.
-- The accepted archive strategy is to include only validated task models rather than invalid placeholders.
-- Transform-library candidates dominate this baseline; current unsolved slice is mostly `external_missing`.
-- Notebook 5 now focuses on cost-aware input-derived solver export, with public-output fallback disabled by default.
+- The accepted archive strategy is solved-task-only: include only validated task models, never invalid placeholders.
+- Transform-library candidates dominate solved coverage; the `2561.08` unsolved slice is mostly `external_missing`.
+- Notebook 5 focuses on cost-aware input-derived solver export, with public-output fallback disabled by default.
 
 ## 6. Solution Principles
 
@@ -191,19 +194,32 @@ Current baseline results:
 
 ## 7. Next Work
 
-The next implementation step is to rerun the cost-aware scorer-compatible export notebook and compare the score against the `2561.08` baseline.
+Submission strategy is notebook-first. See [Section 9](#9-kaggle-submission-flow-notebook-first) for the full flow.
+
+Phased score targets:
+
+| Phase | Target score | Primary action |
+| --- | ---: | --- |
+| 0 — recover baseline | ≥ `3068` COMPLETE | Re-run main competition kernel (`neurogolf-2026-simple-logic-solver`) |
+| 1 — expand safely | ≥ `3235` COMPLETE | Fix export validation in v9 kernel, then push dual-library kernel |
+| 2 — local solver growth | `3300+` | Add background-fill, crop, and object solvers after baseline is stable |
 
 Current score-improvement priorities:
 
-1. Fix external-transform dependency and mount coverage, then rerun notebook 5.
-2. Add exact object extraction and object selection diagnostics for the `158` object movement/selection tasks.
-3. Split the `99` crop/extract/compress tasks into object crop, bounding-box crop, selected-object output, summary/count output, and fixed-template output.
-4. Prioritize anchor-relative crop rules where a unique marker color defines the output window.
-5. Track `solver_family`, `validation_scope`, `candidate_count`, `train_fit`, `onnx_exported`, and `reason_rejected`
+1. Submit only through competition-linked kernels; do not manually submit downloaded `submission.zip` files.
+2. Restore the `3068.97` plateau by re-running the main solver kernel with solved-task-only export.
+3. Tighten pre-export validation before using the v9 expansion kernel (static shapes, IR version, banned ops, ORT load).
+4. Fix external-transform mount coverage when `external_missing` remains the top rejection reason.
+5. Add exact object extraction and object selection diagnostics for the `158` object movement/selection tasks.
+6. Track `solver_family`, `validation_scope`, `candidate_count`, `train_fit`, `onnx_exported`, and `reason_rejected`
    in every manifest row so rule-derived progress is separate from fallback coverage.
-6. Promote a solver family only when it validates on all available task pairs and survives Kaggle scoring.
 
-Recommended next notebook:
+Recommended submission kernels:
+
+- Recovery: `tuannm3812/neurogolf-2026-simple-logic-solver` (scored `3068.97`; one transform-library dataset).
+- Expansion (after validation fix): `tuannm3812/neurogolf-2026-simple-logic-solver-export-v9` (dual transform-library datasets).
+
+Recommended export notebook:
 
 - `notebooks/05_simple_solver_export.ipynb`
 
@@ -324,22 +340,118 @@ Replacement criteria:
 - file size is below the competition limit;
 - manifest records the solver family, validation scope, and rejection reason for each task.
 
-## 9. Kaggle Submission Flow
+## 9. Kaggle Submission Flow (Notebook-First)
 
-- Keep Kaggle credentials available to the CLI:
-  - `KAGGLE_CONFIG_DIR=~/Downloads` (or your folder containing `kaggle.json`).
-- Run `notebooks/05_simple_solver_export.ipynb` in Kaggle with:
-  - `TRANSFORM_LIBRARY_DIR` or `TRANSFORM_LIBRARY_PATH` pointing to a directory that contains:
-    - `simple_logic_onnx/task*.onnx`, or
-    - nested `**/submission/task*.onnx` files.
-  - Optional: set `TASK_DIR` for local runs if not using default Kaggle mount.
-- Push/update the kernel:
-  - `KAGGLE_CONFIG_DIR=~/Downloads kaggle kernels push -p .`
-- Pull fresh output after run:
-  - `KAGGLE_CONFIG_DIR=~/Downloads kaggle kernels output <kernel-slug> -p /tmp/neurogolf-export -o`
-- Package verification:
-  - confirm `simple_logic_manifest.csv` exists in output zip.
-  - verify `submission.zip` includes only solved tasks you intend to submit.
+Submissions must go through a **competition-linked kernel** (`competition_sources: ["neurogolf-2026"]`). The notebook writes `submission.zip` to `/kaggle/working`. Submit the **notebook run output**, not a locally downloaded zip file.
+
+**Do:**
+
+- Push and run the export kernel via CLI.
+- Submit with `kaggle competitions submit -k <kernel-slug> -f submission.zip -v <version>`.
+- Use CLI to orchestrate (`kernels push`, `kernels status`, `kernels output`, `competitions submit -k ...`).
+
+**Do not:**
+
+- Upload a local file path with `competitions submit -f /path/to/submission.zip`.
+- Treat manifest `400 / 400 exported` as scorer-safe without pre-export validation.
+- Fill missing tasks with invalid placeholders to make the archive look complete.
+
+Why: the `2026-06-09` manual v9 submit failed with `SubmissionStatus.ERROR` because the pulled archive contained `400` ONNX files but `58` were scorer-incompatible (dynamic tensor shapes, ORT load failures, unsupported ops). Best scored runs (`3068.97`, `3235.97`) used **validated solved-task-only** archives submitted by the notebook.
+
+### 9.1 Kernel tracks
+
+| Track | Kernel slug | Datasets | Target |
+| --- | --- | --- | ---: |
+| Recovery | `tuannm3812/neurogolf-2026-simple-logic-solver` | `karnakbaevarthur/neurogolf-2026-task-transformation-library` | ≥ `3068` |
+| Expansion | `tuannm3812/neurogolf-2026-simple-logic-solver-export-v9` | above + `konbu17/neurogolf-2026-blended-401-v117` | ≥ `3235` |
+
+Kernel bundle paths in this repo:
+
+- `kaggle/neurogolf-2026-simple-logic-solver-export-v9/`
+
+### 9.2 Archive policy
+
+- **Solved-task-only:** only tasks with `train_fit=True` and scorer-compatible ONNX enter `submission.zip`.
+- **`EXPORT_PUBLIC_OUTPUT_FALLBACK = False`** by default.
+- **`USE_TRANSFORM_LIBRARY = True`** with auto-discovery of mounted library paths on Kaggle.
+- Every rejected task must appear in the manifest with `onnx_exported=False` and a `reason_rejected` code.
+
+Pre-export validation gate (reject before zip write):
+
+- input/output names are `input` / `output`
+- input/output dtype is `float32`
+- input/output shape is exactly `[1, 10, 30, 30]` (no `0` dimensions)
+- no banned ops: `Loop`, `Scan`, `NonZero`, `Unique`, `Script`, `Function`
+- `ir_version <= 9` for external-library models
+- ONNX Runtime CPU session loads successfully
+- all available train and public test pairs pass inference
+- file size `< 1.44MB`
+
+See `docs/03_baseline_models.md` for the full contract and validation details.
+
+### 9.3 CLI workflow
+
+Keep Kaggle credentials available:
+
+- `KAGGLE_CONFIG_DIR=~/Downloads` (or your folder containing `kaggle.json`).
+
+One-command loop (push, wait, pull output, submit notebook run):
+
+```bash
+KAGGLE_CONFIG_DIR=~/Downloads ./scripts/run_kaggle_export.sh
+```
+
+Manual steps:
+
+```bash
+export KAGGLE_CONFIG_DIR=~/Downloads
+export KAGGLE=/Users/tuanm.nguyen/Library/Python/3.9/bin/kaggle
+
+# 1) Push kernel (triggers GPU run)
+$KAGGLE kernels push -p kaggle/neurogolf-2026-simple-logic-solver-export-v9
+# note the pushed version number, e.g. 2
+
+# 2) Poll until complete
+$KAGGLE kernels status tuannm3812/neurogolf-2026-simple-logic-solver-export-v9
+
+# 3) Submit the notebook run output to the competition
+$KAGGLE competitions submit -c neurogolf-2026 \
+  -k tuannm3812/neurogolf-2026-simple-logic-solver-export-v9 \
+  -f submission.zip \
+  -v 2 \
+  -m "Notebook export run"
+
+# 4) Check submission status and score
+$KAGGLE competitions submissions -c neurogolf-2026 | head -5
+
+# 5) Pull output for local triage (optional; do not re-upload this file)
+RUN_ID=$(date +%Y-%m-%d-%H%M)
+$KAGGLE kernels output tuannm3812/neurogolf-2026-simple-logic-solver-export-v9 \
+  -p artifacts/submission/kaggle-runs/$RUN_ID -o
+```
+
+Important: `-f submission.zip` refers to the **output file produced by the kernel run**, not a local path. Do not use `-f artifacts/.../submission.zip`.
+
+Optional environment overrides for transform-library discovery:
+
+- `TRANSFORM_LIBRARY_DIR` or `TRANSFORM_LIBRARY_PATH`
+- library roots may also contain `simple_logic_onnx/task*.onnx` or nested `**/submission/task*.onnx`
+
+Post-run verification:
+
+- confirm `simple_logic_manifest.csv` exists in kernel output;
+- confirm submission status is `COMPLETE`, not `ERROR`;
+- compare manifest against prior run with `scripts/agents/neurogolf_agents.py compare`.
+
+### 9.4 Decision rules
+
+| Observation | Action |
+| --- | --- |
+| Score increases, status `COMPLETE` | Keep kernel version and archive policy |
+| Status `ERROR` | Revert to solved-task-only; tighten validation; do not manual-submit pulled output |
+| Exported count rises, score flat | Run plateau triage; check public-scored task overlap |
+| `external_missing` dominates | Fix dataset mount in kernel metadata, not solver search |
+| Dynamic shape or ORT failure in manifest | Exclude task from zip; record `reason_rejected` |
 
 ## 10. Agent-Driven Score Loop
 
@@ -352,9 +464,10 @@ Use `scripts/agents/neurogolf_agents.py` to enforce a predictable improvement cy
 
 Suggested cycle:
 
-1. Push notebook 5 once complete and wait for Kaggle run completion.
-2. Pull kernel output to a local directory.
-3. Run `report` with the pulled manifest.
-4. Run `track` to append run summaries to history and capture keep/change notes.
-5. Fix the highest-frequency rejection reason first (`external_missing` is currently dominant).
-6. Re-run and then run `compare` against prior manifest for a hard win metric.
+1. Push the competition export kernel and wait for Kaggle run completion.
+2. Confirm auto-submission status is `COMPLETE` via `competitions submissions`.
+3. Pull kernel output to a local directory for triage only (do not re-submit the pulled zip).
+4. Run `report` with the pulled manifest.
+5. Run `track` to append run summaries to history and capture keep/change notes.
+6. Fix the highest-frequency rejection reason first (`external_missing` or scorer validation failures).
+7. Re-run the kernel and then run `compare` against the prior manifest for a hard win metric.

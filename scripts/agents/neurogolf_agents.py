@@ -22,8 +22,43 @@ from typing import Any, Dict, List, Optional, Sequence
 from datetime import datetime
 
 
-DEFAULT_KAGGLE_BIN = shutil.which("kaggle") or "/Users/tuanm.nguyen/Library/Python/3.9/bin/kaggle"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_KAGGLE_BIN = shutil.which("kaggle") or "python -m kaggle"
 DEFAULT_COMPETITION = "neurogolf-2026"
+DEFAULT_CONFIG_DIR = None  # resolved lazily via resolve_default_config_dir()
+
+
+def resolve_kaggle_cmd(kaggle_bin: str = DEFAULT_KAGGLE_BIN) -> List[str]:
+    if kaggle_bin and kaggle_bin != DEFAULT_KAGGLE_BIN:
+        return kaggle_bin.split()
+    which = shutil.which("kaggle")
+    if which:
+        return [which]
+    import sys
+
+    return [sys.executable, "-m", "kaggle"]
+
+
+def resolve_default_config_dir() -> Path:
+    env_dir = os.environ.get("KAGGLE_CONFIG_DIR")
+    if env_dir:
+        return Path(env_dir)
+
+    repo_cfg = REPO_ROOT / ".kaggle"
+    if (repo_cfg / "kaggle.json").exists():
+        return repo_cfg
+
+    search_roots = (
+        REPO_ROOT.parent,
+        REPO_ROOT,
+        Path.home() / "Downloads",
+        Path("/Users/tuanm.nguyen/Downloads"),
+    )
+    for root in search_roots:
+        for name in ("kaggle_tuannm3812.json", "kaggle.json"):
+            if (root / name).exists():
+                return root
+    return Path.home() / "Downloads"
 
 
 def parse_bool(value: Any) -> bool:
@@ -119,30 +154,56 @@ def _run_command(cmd: List[str], env: Dict[str, str]) -> str:
     return result.stdout
 
 
+def _account_credential_names(account: Optional[str]) -> tuple[str, ...]:
+    if account is None:
+        return ("kaggle.json", "kaggle_tuannm3812.json", "kaggle_tuannm3823.json")
+    key_lookup = {
+        "tuannm3812": ("kaggle.json", "kaggle_tuannm3812.json"),
+        "3812": ("kaggle.json", "kaggle_tuannm3812.json"),
+        "tuannm3823": ("kaggle_tuannm3823.json", "kaggle.json"),
+        "3823": ("kaggle_tuannm3823.json", "kaggle.json"),
+    }
+    names = key_lookup.get(account.lower())
+    if not names:
+        raise ValueError(
+            f"Unknown account '{account}'. Use 'tuannm3812'/'3812' or 'tuannm3823'/'3823'."
+        )
+    return names
+
+
+def _find_credential_file(base_dir: Path, account: Optional[str]) -> tuple[Path, str]:
+    search_dirs = [base_dir]
+    if base_dir != REPO_ROOT.parent:
+        search_dirs.append(REPO_ROOT.parent)
+    if (REPO_ROOT / ".kaggle").exists():
+        search_dirs.append(REPO_ROOT / ".kaggle")
+
+    for directory in search_dirs:
+        direct = directory / "kaggle.json"
+        if direct.exists():
+            return direct, "kaggle.json"
+        for filename in _account_credential_names(account):
+            candidate = directory / filename
+            if candidate.exists():
+                return candidate, filename
+    raise FileNotFoundError(
+        f"Kaggle credentials not found under {base_dir} "
+        f"(expected kaggle.json or kaggle_tuannm3812.json)."
+    )
+
+
 def _resolve_kaggle_config_dir(
     base_dir: Path,
     account: Optional[str] = None,
 ) -> tuple[Path, bool]:
-    if account is None:
-        return base_dir, False
+    env_dir = os.environ.get("KAGGLE_CONFIG_DIR")
+    if env_dir and (Path(env_dir) / "kaggle.json").exists():
+        return Path(env_dir), False
 
-    key_lookup = {
-        "tuannm3812": "kaggle.json",
-        "3812": "kaggle.json",
-        "tuannm3823": "kaggle_tuannm3823.json",
-        "3823": "kaggle_tuannm3823.json",
-    }
-    filename = key_lookup.get(account.lower())
-    if not filename:
-        raise ValueError(
-            f"Unknown account '{account}'. Use 'tuannm3812'/'3812' or 'tuannm3823'/'3823'."
-        )
-
-    source = base_dir / filename
-    if not source.exists():
-        raise FileNotFoundError(f"Kaggle credentials not found: {source}")
-
-    if filename == "kaggle.json":
+    source, filename = _find_credential_file(base_dir, account)
+    if filename == "kaggle.json" and source.parent.name == ".kaggle":
+        return source.parent, False
+    if filename == "kaggle.json" and source.parent == base_dir:
         return base_dir, False
 
     # Kaggle CLI expects exactly kaggle.json.
@@ -162,7 +223,10 @@ def fetch_kaggle_submissions(
     env = os.environ.copy()
     env["KAGGLE_CONFIG_DIR"] = str(active_dir)
     try:
-        raw = _run_command([kaggle_bin, "competitions", "submissions", "-c", competition], env=env)
+        raw = _run_command(
+            [*resolve_kaggle_cmd(kaggle_bin), "competitions", "submissions", "-c", competition],
+            env=env,
+        )
     finally:
         if cleanup_dir and active_dir.exists():
             shutil.rmtree(active_dir)
@@ -641,7 +705,7 @@ def parse_args() -> argparse.Namespace:
     score_parser = sub.add_parser("score", help="Check Kaggle submission history")
     score_parser.add_argument("--competition", default=DEFAULT_COMPETITION)
     score_parser.add_argument("--account", default=None)
-    score_parser.add_argument("--config-dir", default="/Users/tuanm.nguyen/Downloads")
+    score_parser.add_argument("--config-dir", default="")
     score_parser.add_argument("--limit", type=int, default=20)
     score_parser.add_argument("--output", default="")
     score_parser.add_argument("--kaggle-bin", default=DEFAULT_KAGGLE_BIN)
@@ -649,7 +713,7 @@ def parse_args() -> argparse.Namespace:
     report_parser = sub.add_parser("report", help="Build score + manifest run report")
     report_parser.add_argument("--competition", default=DEFAULT_COMPETITION)
     report_parser.add_argument("--account", default=None)
-    report_parser.add_argument("--config-dir", default="/Users/tuanm.nguyen/Downloads")
+    report_parser.add_argument("--config-dir", default="")
     report_parser.add_argument("--manifest", default="")
     report_parser.add_argument("--output", default="")
     report_parser.add_argument("--limit", type=int, default=20)
@@ -669,7 +733,7 @@ def parse_args() -> argparse.Namespace:
     track_parser.add_argument("--auto-score", action="store_true", help="Fetch latest kaggle scores and auto-match by run timestamp.")
     track_parser.add_argument("--competition", default=DEFAULT_COMPETITION)
     track_parser.add_argument("--account", default=None)
-    track_parser.add_argument("--config-dir", default="/Users/tuanm.nguyen/Downloads")
+    track_parser.add_argument("--config-dir", default="")
     track_parser.add_argument("--kaggle-bin", default=DEFAULT_KAGGLE_BIN)
     track_parser.add_argument("--score-match-window-minutes", type=int, default=90)
     track_parser.add_argument("--output", default="")
@@ -680,9 +744,15 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
+def _config_dir_from_args(args: argparse.Namespace) -> Path:
+    raw = getattr(args, "config_dir", "") or ""
+    return Path(raw) if raw else resolve_default_config_dir()
+
+
 def main() -> int:
     args = parse_args()
     command = args.command
+    config_dir = _config_dir_from_args(args)
 
     if command == "compare":
         output = run_compare(Path(args.base), Path(args.head))
@@ -700,7 +770,7 @@ def main() -> int:
                 auto_records = fetch_kaggle_submissions(
                     competition=args.competition,
                     account=args.account,
-                    config_dir=Path(args.config_dir),
+                    config_dir=config_dir,
                     kaggle_bin=args.kaggle_bin,
                     limit=20,
                 )
@@ -724,7 +794,7 @@ def main() -> int:
         submissions = fetch_kaggle_submissions(
             competition=args.competition,
             account=args.account,
-            config_dir=Path(args.config_dir),
+            config_dir=config_dir,
             kaggle_bin=args.kaggle_bin,
             limit=args.limit,
         )

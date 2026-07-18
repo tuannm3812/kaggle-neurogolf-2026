@@ -1,0 +1,22 @@
+{
+  "id": "tuannm3812/neurogolf-2026-simple-logic-solver-export-v9",
+  "id_no": 121702878,
+  "title": "NeuroGolf 2026 Simple Logic Solver Export v9",
+  "code_file": "neurogolf-2026-simple-logic-solver-export-v9.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "keywords": [],
+  "dataset_sources": [
+    "karnakbaevarthur/neurogolf-2026-task-transformation-library",
+    "konbu17/neurogolf-2026-blended-401-v117"
+  ],
+  "kernel_sources": [],
+  "competition_sources": [
+    "neurogolf-2026"
+  ],
+  "model_sources": []
+}
