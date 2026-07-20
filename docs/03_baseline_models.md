@@ -23,52 +23,25 @@ Required interface (scorer compatible):
 4. Solver families and cost-based selection
 5. Export packaging and manifest writing
 
-No code changes in this pass changed solver behavior; this refinement pass focused on notebook clarity and output documentation.
-
 ## 3. Latest Run Summary
 
-### 2026-07-20 (kaggle-runs:2026-07-20-1157) — current
+### 2026-07-20 (kaggle-runs:2026-07-20-1610) — current
 
-From `artifacts/submission/kaggle-runs/2026-07-20-1157/simple_logic_manifest.csv`:
+From `artifacts/submission/kaggle-runs/2026-07-20-1610/simple_logic_manifest.csv`:
 
 - Loaded tasks: `400`
 - Exported (`onnx_exported=True`): `399`
-- Unsolved (`onnx_exported=False`): `1`
-- Public score: `3590.21` (`SubmissionStatus.COMPLETE`) — unchanged from v33, despite `2` more tasks solved (`task101` via `partial_background_fill_conv`, `task118` via `runtime_risk_library_onnx`); cause not yet understood
-- `solver_kind` comparison against v33: `0` tasks changed family among the `397` tasks already solved in both runs — confirms `solve_task()` already selects the lowest-cost valid solver everywhere
-- Wave4 "swap to a cheaper local solver" hypothesis: tested and disproven (see §10 History and `docs/06_coding_rules.md` §5). Do not re-run `wave4_probe_externals.py`'s old relaxed-validation mode; it had a bug producing false-positive "improvements" (fixed `2026-07-20`).
-
-### 2026-06-20 (kaggle-runs:2026-06-19-v33) — history
-
-From `artifacts/submission/kaggle-runs/2026-06-19-v33/simple_logic_manifest.csv`:
-
-- Loaded tasks: `400`
-- Exported (`onnx_exported=True`): `397`
-- Unsolved (`onnx_exported=False`): `3`
-- Public score: `3590.21` (`SubmissionStatus.COMPLETE`), stable across v23-v25 and v32-v33
-- Solver mix: `340` external_transform_library, `35` transform_library_onnx, `19` spatial_gather, `2` learned_conv_5x5, `1` dynamic_anchor_crop
+- Unsolved (`onnx_exported=False`): `1` (`task115`, deliberately blocklisted for scorer runtime-risk)
+- Public score: `3590.21` (`SubmissionStatus.COMPLETE`)
+- This is the reverted state after the `barrier_crossing` solver regression (added, caused `3590.21 → 3579.96`, reverted same day) — see `docs/06_coding_rules.md` §5 for the full lesson before attempting a similar solver again.
+- The wave4 "swap to a cheaper local solver" hypothesis is disproven (`0` of `397` tasks would benefit from swapping families); `2` newly-solved tasks (`task101`, `task118`, since reverted) did not move the public score, cause unknown.
 
 ### History
 
-### 2026-06-04 (kaggle-runs:2026-06-04-0650)
-
-From `artifacts/submission/kaggle-runs/2026-06-04-0650/simple_logic_manifest.csv`:
-
-- Loaded tasks: `400`
-- Exported (`onnx_exported=True`): `270`
-- Unsolved (`onnx_exported=False`): `130` (all `external_missing`)
-- Public score: `2561.08` (`SubmissionStatus.COMPLETE`)
-- Solver mix: `228` external, `37` spatial_gather, `4` global_color_map, `1` object_crop
-
-### 2026-06-09 (manual v9 submit — failed)
-
-From pulled v9 kernel output (`tuannm3812/neurogolf-2026-simple-logic-solver-export-v9`):
-
-- Manifest rows: `400 / 400 exported`
-- ONNX files in archive: `400`
-- Public score: none (`SubmissionStatus.ERROR`)
-- Root cause: `58` tasks had scorer-incompatible ONNX (dynamic shapes, ORT load failures, unsupported ops)
-- Lesson: manifest export count ≠ scorer-safe archive; never manual-submit unfiltered kernel output
+- `2026-06-04` (`2561.08`, `270/400`): first scorer-compatible solved-task-only submission.
+- `2026-06-09` manual v9 CLI submit: `SubmissionStatus.ERROR` despite a `400/400` manifest — `58` tasks were scorer-incompatible (dynamic shapes, ORT load failures, unsupported ops). Lesson: manifest export count ≠ scorer-safe archive; never manual-submit unfiltered kernel output.
+- `2026-06-10` to `2026-06-20` (v23-v33): score climbed to and stabilized at `3590.21` via wave-based reexports (`397/400`, solver mix dominated by `external_transform_library`/`transform_library_onnx`).
+- Full run-by-run ledger: `docs/05_agent_score_track.md`.
 
 ### Score reference bands
 
@@ -116,21 +89,18 @@ Record rejection in `reason_rejected` rather than silently dropping the row from
 - Public-output fallback remains disabled by default.
 - Score-relevant progress comes from validated coverage and local solver families, not archive completeness alone.
 
-## 7. Current Solver Families in the Notebook
+## 7. Current Solver Families in `solve_task()`
 
-- `background_to_single_color`
-- `global_color_map` (1x1 mapping)
-- `geometric_color_map` (fixed geometry + color map)
-- `spatial_gather`
-- `fixed_crop`
-- `nearest_integer_scale`
-- `periodic_tile`
-- `single_object_shift`
-- `largest_object_crop`
-- `dynamic_bbox_crop`
-- `dynamic_anchor_crop`
-- `learned_conv_{1x1,3x3,5x5}` (feature-flagged)
-- `external_transform_library` (runtime-selected, validated candidate models)
+In try order (lowest-cost valid candidate wins, not first match):
+
+- `constant`, `identity`
+- `background_to_single_color`, `partial_background_fill_conv`
+- `single_object_shift`, `largest_object_crop`, `ranked_component_crop`
+- `global_color_map`, `geometric_color_map`, `unique_color_order`
+- `spatial_gather`, `fixed_crop`, `dynamic_bbox_crop`, `dynamic_anchor_crop`
+- `nearest_integer_scale`, `periodic_tile`
+- `learned_conv_{1x1,3x3,5x5}` (feature-flagged via `SKIP_LEARNED_CONV`)
+- `external_transform_library`, `runtime_risk_library_onnx` (mounted-dataset candidates)
 
 ## 8. Manifest and Debugging
 
@@ -159,13 +129,7 @@ Use this manifest to answer:
 
 ## 9. Current Working Assumption
 
-The score plateaus previously seen with same-shape-only improvements indicate the next gains are likely in:
-
-1. Object movement/selection solvers
-2. Better shape-change models (`dynamic_bbox_crop` / object-aware transforms)
-3. Marker-driven or relation-aware crop families
-
-The priority is to convert the largest unresolved slices first, then re-run scoreplateau triage in `notebooks/06_score_plateau_triage.ipynb`.
+Same-shape-only improvements have plateaued; the current priority is new native solvers for the specific worst-cost tasks (not broader family sweeps). See `docs/01_instructions.md` §7 for the full, current prioritized list.
 
 ## 10. Historical Notes
 

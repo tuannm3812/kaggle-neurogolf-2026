@@ -76,11 +76,10 @@ Completed:
 
 Current result:
 
-- All-time best and active leaderboard score: `3590.21`, stable across notebook auto-submits v23-v25, v32-v33 (`2026-06-10` to `2026-06-20`), and a `2026-07-20` rerun.
-- Latest export run (`2026-07-20`): `399 / 400` validated, `1` unsolved — `2` more tasks solved than v33 (`task101`, `task118`), but the public score was unchanged at `3590.21`; cause not yet understood, flagged for follow-up rather than assumed.
-- The `2026-06-09` manual v9 submit `ERROR` was resolved; the `2561.08`/`3068.97` plateau history is retired, see `docs/05_agent_score_track.md` for the full run ledger.
+- All-time best and active leaderboard score: `3590.21`, stable since `2026-06-10` (v23) through `2026-07-20`.
+- Latest export run (`2026-07-20`): `399 / 400` validated, `1` unsolved (`task115`, deliberately blocklisted for scorer runtime-risk). Older score history (`2561.08`/`3068.97`/`3235.97`, the `2026-06-09` manual-submit `ERROR`) is retired; see `docs/05_agent_score_track.md` for the full run ledger.
 - Submission strategy is notebook-first: competition kernels auto-submit; see [docs/01_instructions.md](docs/01_instructions.md) Section 9.
-- The wave4 cost-audit "cheaper local solver" hypothesis (raising `A_critical`/`A+B` tasks toward `20`/`18` for an estimated `+58`/`+163`) was investigated `2026-07-20` and disproven: a live rerun with full ONNX Runtime validation confirmed `solve_task()` already picks the lowest-cost valid solver for every task — 0 of 397 previously-solved tasks would benefit from swapping families. `scripts/wave4_probe_externals.py` had a validation-disabling bug that produced 12 false-positive "improvements"; fixed, see `docs/06_coding_rules.md` §5.
+- Two score-improvement hypotheses were tested and closed `2026-07-20`: the wave4 "swap to a cheaper existing solver" angle (disproven — `solve_task()` already picks the lowest-cost valid solver everywhere) and a first hand-built native solver for `task379` (passed every local check, still regressed the live score `3590.21 → 3579.96`, reverted same day). See `docs/06_coding_rules.md` §5 and `docs/01_instructions.md` §7 before attempting either again.
 
 ## 5. Lessons Learned
 
@@ -91,8 +90,8 @@ Current result:
 - Public-output fallback models can make an archive look more complete without improving effective leaderboard score.
 - Train-fit is not enough. Solvers need public-test validation and manifest-level tracking to avoid false confidence.
 - Simple global rules explain only a small slice of the benchmark.
-- The largest remaining opportunities are object movement/selection and crop/extract/compress tasks.
 - Manifest comparison is essential when score plateaus: new internal coverage may not overlap the public scored slice.
+- Passing local validation — even real ONNX Runtime inference against a task's known test pair — is not proof a new solver generalizes to what Kaggle actually grades. Treat any new solver family as unproven until confirmed by a live scored run, and revert immediately on a confirmed regression (`docs/06_coding_rules.md` §5).
 
 ## 6. Repository Map
 
@@ -149,12 +148,12 @@ The repository is intentionally notebook-first. Kaggle notebooks are the executa
 
 | Notebook | Purpose | Current role |
 | --- | --- | --- |
-| `1_eda.ipynb` | Dataset profiling, visual task review, difficult-task gallery | Defines the modeling problem and evidence base |
-| `2_baseline_models.ipynb` | Complete ONNX packaging baseline | Validates archive structure and fallback behavior |
-| `3_solver_diagnostics.ipynb` | Strict solver checks and component diagnostics | Quantifies solver-family opportunities |
-| `4_solver_development.ipynb` | Candidate tables for solver routing | Produces task-level next-action artifacts |
-| `5_simple_solver_export.ipynb` | Scorer-compatible ONNX export | Generates rule-derived and score-oriented task models |
-| `6_score_plateau_triage.ipynb` | Score plateau diagnosis | Compares manifests, isolates new coverage, and renders review panels |
+| `01_eda.ipynb` | Dataset profiling, visual task review, difficult-task gallery | Defines the modeling problem and evidence base |
+| `02_baseline_models.ipynb` | Complete ONNX packaging baseline | Validates archive structure and fallback behavior |
+| `03_solver_diagnostics.ipynb` | Strict solver checks and component diagnostics | Quantifies solver-family opportunities |
+| `04_solver_development.ipynb` | Candidate tables for solver routing | Produces task-level next-action artifacts |
+| `05_simple_solver_export.ipynb` | Scorer-compatible ONNX export | Generates rule-derived and score-oriented task models |
+| `06_score_plateau_triage.ipynb` | Score plateau diagnosis | Compares manifests, isolates new coverage, and renders review panels |
 
 Detailed run instructions and next work live in [docs/01_instructions.md](docs/01_instructions.md).
 

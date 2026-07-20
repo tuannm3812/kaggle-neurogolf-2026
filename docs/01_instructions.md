@@ -107,52 +107,7 @@ Primary notes:
 
 ## 4. Current Approach
 
-The current solution path is deliberately staged.
-
-### 4.1 Stage 1: Understand the Benchmark
-
-We first build a reliable EDA layer. This includes coverage checks, shape analysis, color analysis, palette deltas, task rendering, and solver-track prioritization.
-
-Output:
-
-- task summary CSVs;
-- color-count CSVs;
-- EDA figures;
-- markdown figure report;
-- documented insights.
-
-### 4.2 Stage 2: Validate Submission Mechanics
-
-We then build an ONNX packaging baseline. This does not aim to be competitive by itself. Its purpose is to prove that we can generate a structurally complete archive and diagnose evaluator compatibility.
-
-Current baseline model families:
-
-- single-test constant ONNX models;
-- multi-test input-equality selector ONNX models;
-- constant fallback ONNX models for unsupported tasks.
-
-Output:
-
-- `submission.zip`;
-- model manifest (`simple_logic_manifest.csv`) with solver-family metadata and rejection reasons.
-- validation table.
-
-### 4.3 Stage 3: Implement Real Solver Families
-
-Next, we move from public-output baselines to input-derived solvers. The solver should fit all train pairs before it is exported to ONNX. The first solver-development notebook now builds candidate tables for strict same-shape and shape-changing rules, then routes the remaining tasks into deeper object, compression, expansion, and pattern-analysis tracks.
-
-Initial solver family order:
-
-1. Background-to-single-color solver.
-2. Global color-map solver.
-3. Object extraction and object selection solvers.
-4. Crop, extract, and compression solvers.
-5. Expand, tile, and construction solvers.
-6. Pattern, counting, grid-line, and global-logic solvers.
-
-### 4.4 Stage 4: Export Reliable Solvers to ONNX
-
-Only solver families with clear train-fit behavior should be exported. Each exported solver should be small, static-shape where required, and compatible with the competition's ONNX restrictions.
+The solution was built in 4 stages, all now complete: (1) EDA layer — coverage/shape/color/palette analysis and solver-track prioritization (`notebooks/01_eda.ipynb`, `docs/02_eda_insights.md`); (2) ONNX packaging baseline — proved a structurally complete, evaluator-compatible archive was possible (`notebooks/02_baseline_models.ipynb`); (3) real solver families — moved from public-output baselines to input-derived solvers validated on all train pairs, from simple color/background rules through object, crop, and construction logic; (4) reliable export — only train-fit-validated, static-shape, restriction-compliant solvers get exported. `notebooks/05_simple_solver_export.ipynb` is the current end-to-end export notebook; see §7 for current priorities.
 
 ## 5. Current Results
 
@@ -171,13 +126,9 @@ Current EDA and diagnostics results:
 
 Current baseline results:
 
-- The first scorer-compatible solved-task-only submission completed successfully.
-- All-time best and current active leaderboard public score is `3590.21`, stable across notebook auto-submits from `2026-06-10` (v23) through a `2026-07-20` rerun (`399 / 400` validated, `1` unsolved).
-- The `2026-06-04`-`06-09` history (`3235.97` peak, `3068.97` plateau, `2561.08` active, and the `2026-06-09` manual v9 `SubmissionStatus.ERROR`) is retired; see `docs/05_agent_score_track.md` for the full run ledger.
-- The accepted interface is static one-hot `float32` with shape `[1, 10, 30, 30]`.
-- The accepted archive strategy is solved-task-only: include only validated task models, never invalid placeholders.
-- Transform-library candidates dominate solved coverage. The wave4 "cheaper local solver" hypothesis (`artifacts/analysis/wave4_cost_audit.md`) was tested `2026-07-20` with a live full-validation rerun and disproven: `solve_task()` already picks the lowest-cost valid solver everywhere, so this specific angle is closed. Open question: the `2026-07-20` rerun solved `2` more tasks than v33 (`task101`, `task118`) without moving the public score — cause not yet understood.
-- Notebook 5 focuses on cost-aware input-derived solver export, with public-output fallback disabled by default. Note: the committed `notebooks/05_simple_solver_export.ipynb` has drifted from the working `kaggle/` kernel bundles (a solver-loop bug means it would currently export nothing) — the pushed kernels are unaffected, but the repo notebook needs a fix before further local edits.
+- All-time best and current active leaderboard public score is `3590.21`, stable since `2026-06-10` (v23) through the latest confirmed run (`2026-07-20`, `399 / 400` validated, `1` unsolved). Older score history (`3235.97`, `3068.97`, `2561.08`, the `2026-06-09` manual-submit `ERROR`) is retired; see `docs/05_agent_score_track.md` for the full run ledger.
+- The accepted interface is static one-hot `float32` with shape `[1, 10, 30, 30]`; archive strategy is solved-task-only (never invalid placeholders).
+- Transform-library candidates dominate solved coverage. Two open items, not yet resolved: (1) a `2026-07-20` rerun solved `2` more tasks than the prior baseline (`task101`, `task118`) without moving the public score — cause unknown; (2) `notebooks/05_simple_solver_export.ipynb` is kept in sync with the deployed `kaggle/` kernel bundles as of `2026-07-20` — verify this hasn't drifted again before trusting local edits there.
 
 ## 6. Solution Principles
 
@@ -201,7 +152,7 @@ Phased score targets (phases 0-1 are done, retained for history):
 | 0 — recover baseline | ≥ `3068` COMPLETE | Re-run main competition kernel (`neurogolf-2026-simple-logic-solver`) | Done (`2026-06-04`) |
 | 1 — expand safely | ≥ `3235` COMPLETE | Fix export validation in v9 kernel, then push dual-library kernel | Done, surpassed (`3590.21` since `2026-06-10`) |
 | 2 — wave4 solver-swap targeting | `~3648`-`3753` | Raise lowest-scoring exported tasks by swapping to a cheaper *existing* local solver | Disproven (`2026-07-20`) |
-| 3 — native solvers for worst-cost tasks | TBD, see below | Hand-build small native solvers for the specific `A_critical`/`B_high` tasks currently solved only by bloated external-library graphs | Current priority (`2026-07-20`) |
+| 3 — native solvers for worst-cost tasks | TBD, see below | Hand-build small native solvers for the specific `A_critical`/`B_high` tasks currently solved only by bloated external-library graphs | First attempt reverted (`2026-07-20`, `task379`) — see §7.1 |
 
 ### 7.1 Cost model (why phase 2 failed and phase 3 can work)
 
@@ -228,16 +179,23 @@ latest manifest before trusting stale numbers) — it requires genuine
 per-task rule discovery (inspect train pairs, find the actual
 transformation, build/validate a new solver), not a mechanical fix.
 
+**First attempt result (`2026-07-20`, `task379`):** derived and shipped a
+`barrier_crossing` solver that passed every local check, including real
+ONNX Runtime inference against the known local test pair — and it still
+caused a live score regression (`3590.21` → `3579.96`), reverted the same
+day. Local test-pair validation is not proof a new solver generalizes to
+what Kaggle actually grades; see `docs/06_coding_rules.md` §5 for the full
+lesson before attempting this again.
+
 Current score-improvement priorities, in order:
 
 1. Submit only through competition-linked kernels; do not manually submit downloaded `submission.zip` files.
 2. Do not re-attempt the wave4 "swap to a cheaper existing local solver" angle: proven closed, see §7.1.
-3. Work the worst-cost tasks one at a time: pick from the bottom of a freshly-regenerated `wave4_cost_audit.md`, inspect that task's train pairs directly (`load_tasks`, `task_pairs`), look for a compact rule, prototype a new `try_*_solver` function, validate with full ONNX Runtime pair-checking (never the relaxed mode — see the `2026-07-20` lesson in `docs/06_coding_rules.md` §5), then add it to `solve_task()`'s solver list in both `notebooks/05_simple_solver_export.ipynb` and the `kaggle/` kernel bundle.
+3. Work the worst-cost tasks one at a time: pick from the bottom of a freshly-regenerated `wave4_cost_audit.md`, inspect that task's train pairs directly (`load_tasks`, `task_pairs`), look for a compact rule, prototype a new `try_*_solver` function, validate with full ONNX Runtime pair-checking, then add it to `solve_task()`'s solver list in both `notebooks/05_simple_solver_export.ipynb` and the `kaggle/` kernel bundle — but treat any local pass as provisional and confirm with a live scored run before trusting it (see the `task379` lesson above).
 4. Before spending effort on any currently-*unsolved* task (right now only `task115`, deliberately blocklisted for scorer runtime-risk): confirm it's actually part of the scored subset first. `task101`/`task118` were newly solved `2026-07-20` and the public score didn't move at all, suggesting not every task_id counts toward the public score. Re-verify with a controlled single-task before/after comparison if pursuing coverage.
 5. `task115` specifically: `task118` (same runtime-risk blocklist category) was successfully re-enabled `2026-07-20` — worth checking whether `task115`'s original blocking reason still applies before assuming it's permanently out of reach.
 6. Track `solver_family`, `validation_scope`, `candidate_count`, `train_fit`, `onnx_exported`, and `reason_rejected`
    in every manifest row so rule-derived progress is separate from fallback coverage.
-7. Fix the `notebooks/05_simple_solver_export.ipynb` drift from the working `kaggle/` kernel bundles before making further local edits to it (see `docs/06_coding_rules.md`) — lower urgency now since the deployed kernels are unaffected, but blocks safely prototyping new solvers locally in the repo notebook.
 
 Recommended submission kernel:
 
@@ -274,95 +232,9 @@ Supporting diagnostic artifacts:
 - `neurogolf_shape_solver_fits.csv` (`artifacts/analysis/`)
 - `neurogolf_solver_development_artifacts.zip` (`artifacts/analysis/`)
 
-Recommended first solver targets:
+## 8. Original Implementation Plan (complete)
 
-- full-background-fill tasks;
-- global color-map tasks;
-- low-component object selection tasks;
-- crop/extract/compress tasks with clear bounding-box behavior.
-
-## 8. Next Implementation Plan
-
-### 8.1 Build the Solver Candidate Table
-
-Create a task-level table that joins:
-
-- EDA structural features;
-- solver diagnostics;
-- connected-component features;
-- current baseline model family;
-- validation result;
-- recommended next solver family.
-
-Expected artifact:
-
-- `neurogolf_solver_candidate_table.csv`
-
-### 8.2 Implement Same-Shape Rule Solvers
-
-Start with the highest-confidence same-shape families:
-
-- background-to-single-color;
-- global color map;
-- mask-fill;
-- object-preserving recolor;
-- simple symmetry transforms only where diagnostics prove train-fit.
-
-Expected result:
-
-- exact task ids solved on all train pairs;
-- failure examples for near misses;
-- ONNX export feasibility per solver.
-
-Expected artifact:
-
-- `submission.zip`
-- `simple_logic_manifest.csv`
-- solver-family validation summaries from notebook output
-
-### 8.3 Implement Object-Level Solvers
-
-Use connected components to test object-level hypotheses:
-
-- select largest/smallest object;
-- select object by color;
-- move object by inferred vector;
-- remove background/noise objects;
-- copy, align, or complete object patterns.
-
-Expected result:
-
-- object solver coverage table;
-- rendered before/after examples for solved and failed tasks.
-
-### 8.4 Implement Shape-Changing Solvers
-
-Prioritize compression and expansion separately:
-
-- crop to non-background bounding box;
-- crop to selected object;
-- fixed-template output from selected object;
-- integer scale;
-- tile or periodic repetition;
-- object replication or construction.
-
-Expected result:
-
-- train-fit coverage by shape-change family;
-- list of tasks needing dynamic output shape handling;
-- ONNX export plan for each supported shape family.
-
-### 8.5 Replace Packaging Baselines
-
-Once a real solver explains all train pairs for a task, replace the public-output baseline model for that task.
-
-Replacement criteria:
-
-- solver matches every train pair;
-- solver output is derived from input;
-- exported ONNX validates locally;
-- file size is below the competition limit;
-- manifest records the solver family, validation scope, and rejection reason for each task.
+The original build-out plan — a solver candidate table joining EDA/diagnostic features (`neurogolf_solver_candidate_table.csv`), then same-shape rule solvers, object-level solvers, shape-changing solvers, and finally replacing packaging baselines with validated real solvers task-by-task — is fully implemented. Every family it called for (`background_to_single_color`, `global_color_map`, object crop/selection, `dynamic_bbox_crop`/`dynamic_anchor_crop`, scale/tile, etc.) exists in `solve_task()` today; see `docs/03_baseline_models.md` §7 for the current solver-family list. Current priorities live in §7 above, not here.
 
 ## 9. Kaggle Submission Flow (Notebook-First)
 

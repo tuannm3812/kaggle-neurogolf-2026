@@ -80,10 +80,10 @@ Notebook / experiment hygiene around any agent cycle:
 
 ## 5. Current Priority From This Report
 
-- Active leaderboard and all-time best score: `3590.21`, stable since `2026-06-10` (v23) through the latest confirmed run (`2026-07-20`: `399 / 400` exported, `1` unsolved).
-- The `2026-06-09` manual v9 `SubmissionStatus.ERROR` is resolved; the earlier `2561.08`/`3068.97` plateau is retired history, not the current state.
-- The wave4 "cheaper local solver" hypothesis is closed (disproven `2026-07-20`): a live rerun with full ORT validation showed `solve_task()` already picks the lowest-cost valid solver everywhere; 0 of 397 previously-solved tasks would benefit from swapping. Do not re-attempt this angle without a new solver family.
-- Immediate open question: the `2026-07-20` rerun solved `2` more tasks (`task101`, `task118`) than v33 but scored identically (`3590.21`) — investigate why before assuming future coverage gains will move the score.
+- Active leaderboard and all-time best score: `3590.21` (`399 / 400` exported, `1` unsolved, deliberately blocklisted).
+- The wave4 "swap to a cheaper local solver" hypothesis is closed (disproven `2026-07-20`): `solve_task()` already picks the lowest-cost valid solver everywhere. Current priority is genuinely new native solvers for the worst-cost tasks instead — see `docs/01_instructions.md` §7.
+- A first attempt (`task379`, `barrier_crossing`) passed every local check, including real ONNX Runtime inference, and still regressed the live score (`3590.21` → `3579.96`); reverted same day. Local validation is not proof of generalization — see `docs/06_coding_rules.md` §5 before trying this again.
+- Open question, not yet investigated: solving `task101`/`task118` didn't move the public score at all — confirm a task counts toward scoring before investing effort in it.
 - Before using v9 expansion: enforce pre-export validation gate documented in `docs/03_baseline_models.md`.
 
 ## 6. Command Examples
