@@ -2,7 +2,7 @@
 
 This note records the current stable baseline and the notebook workflow we use for NeuroGolf 2026 submissions.
 
-## 1) Task Contract
+## 1. Task Contract
 
 For each task ID `task001` through `task400`, the submission should contain one ONNX file named `taskXXX.onnx` in `submission.zip`.
 
@@ -13,7 +13,7 @@ Required interface (scorer compatible):
 - Solver execution is done in static one-hot space
 - ARC output is decoded from the first `h x w` region of the output canvas
 
-## 2) Current Baseline Implementation
+## 2. Current Baseline Implementation
 
 `notebooks/05_simple_solver_export.ipynb` is now the main export notebook and is organized into:
 
@@ -25,7 +25,7 @@ Required interface (scorer compatible):
 
 No code changes in this pass changed solver behavior; this refinement pass focused on notebook clarity and output documentation.
 
-## 3) Latest Run Summary
+## 3. Latest Run Summary
 
 ### 2026-06-04 (kaggle-runs:2026-06-04-0650)
 
@@ -57,7 +57,7 @@ From pulled v9 kernel output (`tuannm3812/neurogolf-2026-simple-logic-solver-exp
 | `3133–3235` | Best external-library coverage | Solved-only, peak |
 | `ERROR` | Scorer rejected archive | Complete or unvalidated archive |
 
-## 4) Archive Policy
+## 4. Archive Policy
 
 Default export policy is **solved-task-only**:
 
@@ -68,7 +68,7 @@ Default export policy is **solved-task-only**:
 
 Competition-linked kernels auto-submit `/kaggle/working/submission.zip`. Pulled output is for triage and manifest comparison only.
 
-## 5) Pre-Export Validation Gate
+## 5. Pre-Export Validation Gate
 
 Reject a candidate model before writing it to the submission archive when any check fails:
 
@@ -85,14 +85,14 @@ Reject a candidate model before writing it to the submission archive when any ch
 
 Record rejection in `reason_rejected` rather than silently dropping the row from the manifest.
 
-## 6) What This Means
+## 6. What This Means
 
 - The external transform library dominates solved coverage when mounted correctly.
 - More exported tasks only help when every added task passes the scorer validation gate.
 - Public-output fallback remains disabled by default.
 - Score-relevant progress comes from validated coverage and local solver families, not archive completeness alone.
 
-## 7) Current Solver Families in the Notebook
+## 7. Current Solver Families in the Notebook
 
 - `background_to_single_color`
 - `global_color_map` (1x1 mapping)
@@ -108,7 +108,7 @@ Record rejection in `reason_rejected` rather than silently dropping the row from
 - `learned_conv_{1x1,3x3,5x5}` (feature-flagged)
 - `external_transform_library` (runtime-selected, validated candidate models)
 
-## 8) Manifest and Debugging
+## 8. Manifest and Debugging
 
 `simple_logic_manifest.csv` is the control surface for validation and debugging.
 
@@ -133,7 +133,7 @@ Use this manifest to answer:
 - Which family was cheapest for a given task?
 - Are rejected candidates failing local validation, ONNX validation, or size constraints?
 
-## 9) Current Working Assumption
+## 9. Current Working Assumption
 
 The score plateaus previously seen with same-shape-only improvements indicate the next gains are likely in:
 
@@ -143,7 +143,7 @@ The score plateaus previously seen with same-shape-only improvements indicate th
 
 The priority is to convert the largest unresolved slices first, then re-run scoreplateau triage in `notebooks/06_score_plateau_triage.ipynb`.
 
-## 10) Historical Notes
+## 10. Historical Notes
 
 - Early versions (5–10) validated core scoring compatibility of the fixed one-hot interface and complete submission packaging.
 - Mid revisions with geometric/crop/learned additions moved local candidate diversity but did not show public-score lift relative to earlier baselines.

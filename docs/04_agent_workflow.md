@@ -3,14 +3,14 @@
 This document defines the lightweight agent stack used to run, monitor, and improve
 the Kaggle score quickly.
 
-## Why this exists
+## 1. Why This Exists
 
 - Score plateaus can be misleading without manifest context.
 - Public score improvements only come from tasks solved by actual train-fit rules, not placeholders.
 - External-transform candidates are currently the largest coverage slice; we need fast checks to detect exactly where they fail and what to build next.
 - Submission status (`COMPLETE` vs `ERROR`) matters as much as exported task count.
 
-## Submission rule: notebook-first
+## 2. Submission Rule: Notebook-First
 
 - **Submit the notebook run**, not a locally downloaded zip.
 - After `kernels push` completes, run:
@@ -34,7 +34,7 @@ KAGGLE_CONFIG_DIR=~/Downloads ./scripts/run_kaggle_export.sh
 
 Strategy details: `docs/01_instructions.md` Section 9.
 
-## Agents implemented in `scripts/agents/neurogolf_agents.py`
+## 3. Agents Implemented in `scripts/agents/neurogolf_agents.py`
 
 - `score`  
   fetches recent submission records for an account and competition.
@@ -45,7 +45,7 @@ Strategy details: `docs/01_instructions.md` Section 9.
 - `track`  
   tracks multiple manifest versions into a versioned ledger and summarizes keep/change lessons.
 
-## Commit protocol for agent functions
+## 4. Commit Protocol for Agent Functions
 
 Use one commit per completed function run when outputs changed:
 
@@ -78,17 +78,15 @@ Notebook / experiment hygiene around any agent cycle:
 3. Review diff for scope and relevance.
 4. Commit and push with a message that includes the active function name.
 
-## Current priority from this report
+## 5. Current Priority From This Report
 
-As of the latest evidence:
-
-- Active leaderboard score: `2561.08` (`270` exported, `130` external_missing).
+- Active leaderboard score (`2026-06-04`): `2561.08` (`270` exported, `130` external_missing).
 - All-time best score: `3235.97`; stable plateau: `3068.97`.
 - Latest submit attempt (`2026-06-09` manual v9 CLI): `SubmissionStatus.ERROR`.
 - Immediate action: re-run the recovery kernel (`neurogolf-2026-simple-logic-solver`) via notebook auto-submit, not manual zip upload.
 - Before using v9 expansion: enforce pre-export validation gate documented in `docs/03_baseline_models.md`.
 
-## Command examples
+## 6. Command Examples
 
 - Check latest score for account `tuannm3812`:
 
@@ -150,7 +148,7 @@ python3 scripts/agents/neurogolf_agents.py compare \
   --output docs/agent_manifest_delta.md
 ```
 
-## Nightly score-improvement schedule
+## 7. Nightly Score-Improvement Schedule
 
 1. Push the competition export kernel (or run `./scripts/run_kaggle_export.sh`).
 2. Confirm auto-submission status is `COMPLETE` via `competitions submissions`.
@@ -160,7 +158,7 @@ python3 scripts/agents/neurogolf_agents.py compare \
 6. If unresolved reasons are mostly `external_missing`, fix transform-library discovery/path mounting first.
 7. Otherwise, promote one solver family into the export notebook, rerun the kernel, and compare manifests.
 
-## Lessons rulebook (keep vs change)
+## 8. Lessons Rulebook (Keep vs Change)
 
 - Keep:
   - any run with positive `Δexported` and no new top rejection failure introduced.
@@ -170,7 +168,7 @@ python3 scripts/agents/neurogolf_agents.py compare \
   - top rejection reasons stay on the same brittle class after attempted fixes.
   - no positive family delta for newly introduced families after at least two reruns.
 
-## Exit criteria for each iteration
+## 9. Exit Criteria for Each Iteration
 
 - Submission status is `COMPLETE`, not `ERROR`.
 - Manifest shows non-zero task recovery when targeting expansion.

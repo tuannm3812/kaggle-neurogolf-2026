@@ -102,23 +102,36 @@ Current result:
 ├── README.md
 ├── scripts/
 │   ├── clean_notebook_outputs.py
+│   ├── patch_v28_kernel.py
+│   ├── profile_v18_unsolved.py
+│   ├── wave4_cost_audit.py
+│   ├── wave4_probe_externals.py
+│   ├── kaggle_env.sh / .ps1
+│   ├── run_kaggle_export.sh / .ps1
+│   ├── monitor_kaggle_run.sh / .ps1
+│   ├── monitor_v28_run.ps1
+│   ├── setup_kaggle_credentials.ps1
 │   └── agents/
 │       └── neurogolf_agents.py
 ├── docs/
-│   ├── 1_instructions.md
-│   ├── 2_eda_insights.md
-│   ├── 3_baseline_models.md
-│   ├── assets/
+│   ├── 01_instructions.md
+│   ├── 02_eda_insights.md
+│   ├── 03_baseline_models.md
+│   ├── 04_agent_workflow.md
+│   ├── 05_agent_score_track.md
 │   ├── 06_coding_rules.md
-│   └── 4_agent_workflow.md
+│   ├── assets/
 │   └── figures/
 ├── notebooks/
-    ├── 1_eda.ipynb
-    ├── 2_baseline_models.ipynb
-    ├── 3_solver_diagnostics.ipynb
-    ├── 4_solver_development.ipynb
-    ├── 5_simple_solver_export.ipynb
-    └── 6_score_plateau_triage.ipynb
+│   ├── 01_eda.ipynb
+│   ├── 02_baseline_models.ipynb
+│   ├── 03_solver_diagnostics.ipynb
+│   ├── 04_solver_development.ipynb
+│   ├── 05_simple_solver_export.ipynb
+│   └── 06_score_plateau_triage.ipynb
+├── kaggle/ (pushed kernel bundles, mirrors notebooks/)
+│   ├── neurogolf-2026-simple-logic-solver/
+│   └── neurogolf-2026-simple-logic-solver-export-v9/
 └── artifacts/ (gitignored)
     ├── submission/
     │   ├── local-runs/
