@@ -33,6 +33,8 @@
 | kaggle-runs:2026-06-19-v32 | 2026-06-19 13:17:53 | unknown | 397 | 3 | 30 | 30 | onnx | +30 solved |
 | kaggle-runs:2026-06-19-v33 | 2026-06-20 07:06:11 | unknown | 397 | 3 | 0 | 0 | onnx | no net coverage change |
 | kaggle-runs:2026-07-20-1157 | 2026-07-20 13:12:23 | 3590.2100 | 399 | 1 | 2 | 2 | onnx | +2 solved |
+| kaggle-runs:2026-07-20-1448 | 2026-07-20 15:58:51 | 3579.9600 | 399 | 1 | 0 | 0 | onnx | no net coverage change |
+| kaggle-runs:2026-07-20-1610 | 2026-07-20 17:25:26 | 3590.2100 | 399 | 1 | 0 | 0 | onnx | no net coverage change |
 
 ## Keep this
 - Keep: `kaggle-runs:2026-06-04-0650` improved solved coverage by 2 tasks.
@@ -58,6 +60,9 @@
 - Change: `kaggle-runs:2026-06-10-v25-wave4-expensive-learned-conv` did not improve solved coverage; validate new solver families before widening search.
 - Change: `kaggle-runs:2026-06-18-v30` did not improve solved coverage; validate new solver families before widening search.
 - Change: `kaggle-runs:2026-06-19-v33` did not improve solved coverage; validate new solver families before widening search.
+- Change: `kaggle-runs:2026-07-20-1448` did not improve solved coverage; validate new solver families before widening search.
+- Change: `kaggle-runs:2026-07-20-1448` score dropped by 10.2500 vs previous.
+- Change: `kaggle-runs:2026-07-20-1610` did not improve solved coverage; validate new solver families before widening search.
 
 ## Recommended next step
 - Promote the highest-yield family from the positive delta row, then rerun only that notebook change.
