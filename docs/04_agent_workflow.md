@@ -80,10 +80,9 @@ Notebook / experiment hygiene around any agent cycle:
 
 ## 5. Current Priority From This Report
 
-- Active leaderboard score (`2026-06-04`): `2561.08` (`270` exported, `130` external_missing).
-- All-time best score: `3235.97`; stable plateau: `3068.97`.
-- Latest submit attempt (`2026-06-09` manual v9 CLI): `SubmissionStatus.ERROR`.
-- Immediate action: re-run the recovery kernel (`neurogolf-2026-simple-logic-solver`) via notebook auto-submit, not manual zip upload.
+- Active leaderboard and all-time best score: `3590.21`, stable since `2026-06-10` (v23) through the latest confirmed run (`2026-06-20`, v33: `397 / 400` exported, `3` unsolved).
+- The `2026-06-09` manual v9 `SubmissionStatus.ERROR` is resolved; the earlier `2561.08`/`3068.97` plateau is retired history, not the current state.
+- Immediate action: pursue the wave4 cost-audit targets (`artifacts/analysis/wave4_cost_audit.md`) — raising the lowest-scoring `external_transform_library`/`transform_library_onnx` tasks is the identified next upside (`+58` to `+163` estimated public score).
 - Before using v9 expansion: enforce pre-export validation gate documented in `docs/03_baseline_models.md`.
 
 ## 6. Command Examples

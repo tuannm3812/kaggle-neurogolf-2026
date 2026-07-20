@@ -45,9 +45,9 @@ Our project goals are:
 | Shape behavior | `262` same-area tasks, `138` shape-changing tasks |
 | Palette behavior | `176` same-palette, `224` palette-changing tasks |
 | Simple solver slice | `62` same-shape candidates, `4` simple shape-changing candidates |
-| Best known public score | `3235.97` (all-time); active leaderboard `2561.08` |
-| Latest export run | `270 / 400` validated on active run; v9 manifest reached `400 / 400` but manual submit `ERROR` |
-| Current plateau | Recover via notebook auto-submit; do not manual-submit pulled kernel output |
+| Best known public score | `3590.21` (all-time and active leaderboard, stable since `2026-06-10`) |
+| Latest export run | `397 / 400` validated (v33, `2026-06-20`); `3` unsolved |
+| Current plateau | `3590.21` since v23 (`2026-06-10`); next upside is wave4-targeted low-score tasks, see `docs/05_agent_score_track.md` |
 
 Solver-development routing:
 
@@ -76,11 +76,11 @@ Completed:
 
 Current result:
 
-- All-time best public score: `3235.97`; stable plateau: `3068.97`; active leaderboard: `2561.08`.
-- Latest export baseline on active run: `270` validated tasks, `130` unsolved (`external_missing`).
-- A `2026-06-09` manual v9 submit failed with `ERROR` (400-file archive, 58 scorer-incompatible ONNX).
+- All-time best and active leaderboard score: `3590.21`, stable across notebook auto-submits v23-v25 and v32-v33 (`2026-06-10` to `2026-06-20`).
+- Latest export run (v33): `397 / 400` validated, `3` unsolved.
+- The `2026-06-09` manual v9 submit `ERROR` was resolved; the `2561.08`/`3068.97` plateau history is retired, see `docs/05_agent_score_track.md` for the full run ledger.
 - Submission strategy is notebook-first: competition kernels auto-submit; see [docs/01_instructions.md](docs/01_instructions.md) Section 9.
-- The next score-improvement direction is recover the `3068` kernel baseline, then expand with validated solved-task-only export.
+- The next score-improvement direction is the wave4 cost-audit targeting: raising the 9 lowest-scoring `A_critical` tasks (mostly `external_transform_library`) toward score `20` is estimated at `+58` public (`~3648`); the top `38` `A+B` tasks toward `18` is estimated at `+163` (`~3753`). See `artifacts/analysis/wave4_cost_audit.md`.
 
 ## 5. Lessons Learned
 

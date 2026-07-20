@@ -172,14 +172,12 @@ Current EDA and diagnostics results:
 Current baseline results:
 
 - The first scorer-compatible solved-task-only submission completed successfully.
-- All-time best public score is `3235.97` at `2026-06-04 05:45:01` (261 external-transform candidates).
-- Stable plateau score is `3068.97` (v4 ranked crop + transform lib fixes; three COMPLETE runs).
-- Current active leaderboard score is `2561.08` at `2026-06-04 17:00:21` (270 validated tasks, 130 `external_missing`).
-- Latest submission attempt (`2026-06-09`) failed with `SubmissionStatus.ERROR`: a manually submitted v9 archive had `400` manifest rows but `58` scorer-incompatible ONNX files (dynamic shapes, ORT load failures, unsupported ops).
+- All-time best and current active leaderboard public score is `3590.21`, stable across notebook auto-submits from `2026-06-10` (v23) through the latest confirmed run `2026-06-20` (v33: `397 / 400` validated, `3` unsolved).
+- The `2026-06-04`-`06-09` history (`3235.97` peak, `3068.97` plateau, `2561.08` active, and the `2026-06-09` manual v9 `SubmissionStatus.ERROR`) is retired; see `docs/05_agent_score_track.md` for the full run ledger.
 - The accepted interface is static one-hot `float32` with shape `[1, 10, 30, 30]`.
 - The accepted archive strategy is solved-task-only: include only validated task models, never invalid placeholders.
-- Transform-library candidates dominate solved coverage; the `2561.08` unsolved slice is mostly `external_missing`.
-- Notebook 5 focuses on cost-aware input-derived solver export, with public-output fallback disabled by default.
+- Transform-library candidates dominate solved coverage; the wave4 cost audit (`artifacts/analysis/wave4_cost_audit.md`) identifies the remaining upside as raising low-scoring `external_transform_library`/`transform_library_onnx` tasks rather than closing new `external_missing` gaps.
+- Notebook 5 focuses on cost-aware input-derived solver export, with public-output fallback disabled by default. Note: the committed `notebooks/05_simple_solver_export.ipynb` has drifted from the working `kaggle/` kernel bundles (a solver-loop bug means it would currently export nothing) — the pushed kernels are unaffected, but the repo notebook needs a fix before further local edits.
 
 ## 6. Solution Principles
 
@@ -196,28 +194,27 @@ Current baseline results:
 
 Submission strategy is notebook-first. See [Section 9](#9-kaggle-submission-flow-notebook-first) for the full flow.
 
-Phased score targets:
+Phased score targets (phases 0-1 are done, retained for history):
 
-| Phase | Target score | Primary action |
-| --- | ---: | --- |
-| 0 — recover baseline | ≥ `3068` COMPLETE | Re-run main competition kernel (`neurogolf-2026-simple-logic-solver`) |
-| 1 — expand safely | ≥ `3235` COMPLETE | Fix export validation in v9 kernel, then push dual-library kernel |
-| 2 — local solver growth | `3300+` | Add background-fill, crop, and object solvers after baseline is stable |
+| Phase | Target score | Primary action | Status |
+| --- | ---: | --- | --- |
+| 0 — recover baseline | ≥ `3068` COMPLETE | Re-run main competition kernel (`neurogolf-2026-simple-logic-solver`) | Done (`2026-06-04`) |
+| 1 — expand safely | ≥ `3235` COMPLETE | Fix export validation in v9 kernel, then push dual-library kernel | Done, surpassed (`3590.21` since `2026-06-10`) |
+| 2 — wave4 cost targeting | `~3648`-`3753` | Raise lowest-scoring exported tasks per `artifacts/analysis/wave4_cost_audit.md` | Current priority |
 
 Current score-improvement priorities:
 
 1. Submit only through competition-linked kernels; do not manually submit downloaded `submission.zip` files.
-2. Restore the `3068.97` plateau by re-running the main solver kernel with solved-task-only export.
-3. Tighten pre-export validation before using the v9 expansion kernel (static shapes, IR version, banned ops, ORT load).
-4. Fix external-transform mount coverage when `external_missing` remains the top rejection reason.
-5. Add exact object extraction and object selection diagnostics for the `158` object movement/selection tasks.
-6. Track `solver_family`, `validation_scope`, `candidate_count`, `train_fit`, `onnx_exported`, and `reason_rejected`
+2. Work the wave4 cost-audit list (`artifacts/analysis/wave4_cost_audit.md`): the 9 lowest-scoring `A_critical` tasks (mostly `external_transform_library`/`transform_library_onnx`, score `< 10`) are the highest-yield target, estimated `+58` public score if raised to `~20`.
+3. Extend to the `A+B` tier (`38` tasks, score `< 12`) for a further estimated `+163` public score.
+4. Re-run `wave4_cost_audit.py` and `wave4_probe_externals.py` against the latest manifest before committing to a specific solver swap, since estimates are ratio-based, not guaranteed.
+5. Track `solver_family`, `validation_scope`, `candidate_count`, `train_fit`, `onnx_exported`, and `reason_rejected`
    in every manifest row so rule-derived progress is separate from fallback coverage.
+6. Fix the `notebooks/05_simple_solver_export.ipynb` drift from the working `kaggle/` kernel bundles before making further local edits to it (see `docs/06_coding_rules.md`).
 
-Recommended submission kernels:
+Recommended submission kernel:
 
-- Recovery: `tuannm3812/neurogolf-2026-simple-logic-solver` (scored `3068.97`; one transform-library dataset).
-- Expansion (after validation fix): `tuannm3812/neurogolf-2026-simple-logic-solver-export-v9` (dual transform-library datasets).
+- Expansion: `tuannm3812/neurogolf-2026-simple-logic-solver-export-v9` (dual transform-library datasets) — this has been the active kernel since v17 and currently scores `3590.21`.
 
 Recommended export notebook:
 
@@ -356,14 +353,16 @@ Submissions must go through a **competition-linked kernel** (`competition_source
 - Treat manifest `400 / 400 exported` as scorer-safe without pre-export validation.
 - Fill missing tasks with invalid placeholders to make the archive look complete.
 
-Why: the `2026-06-09` manual v9 submit failed with `SubmissionStatus.ERROR` because the pulled archive contained `400` ONNX files but `58` were scorer-incompatible (dynamic tensor shapes, ORT load failures, unsupported ops). Best scored runs (`3068.97`, `3235.97`) used **validated solved-task-only** archives submitted by the notebook.
+Why: the `2026-06-09` manual v9 submit failed with `SubmissionStatus.ERROR` because the pulled archive contained `400` ONNX files but `58` were scorer-incompatible (dynamic tensor shapes, ORT load failures, unsupported ops). Every best-scored run since (`3068.97`, `3235.97`, and the current `3590.21`) used **validated solved-task-only** archives submitted by the notebook.
 
 ### 9.1 Kernel tracks
 
 | Track | Kernel slug | Datasets | Target |
 | --- | --- | --- | ---: |
-| Recovery | `tuannm3812/neurogolf-2026-simple-logic-solver` | `karnakbaevarthur/neurogolf-2026-task-transformation-library` | ≥ `3068` |
-| Expansion | `tuannm3812/neurogolf-2026-simple-logic-solver-export-v9` | above + `konbu17/neurogolf-2026-blended-401-v117` | ≥ `3235` |
+| Recovery | `tuannm3812/neurogolf-2026-simple-logic-solver` | `karnakbaevarthur/neurogolf-2026-task-transformation-library` | ≥ `3068` (baseline floor, superseded) |
+| Expansion | `tuannm3812/neurogolf-2026-simple-logic-solver-export-v9` | above + `konbu17/neurogolf-2026-blended-401-v117` | ≥ `3648` (wave4 upside target; current active score `3590.21`) |
+
+The expansion track has been the active one since the v17-v33 wave-based iterations (`docs/05_agent_score_track.md`); its original `≥ 3235` target was reached and surpassed weeks ago.
 
 Kernel bundle paths in this repo:
 

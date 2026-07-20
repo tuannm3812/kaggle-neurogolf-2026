@@ -27,6 +27,19 @@ No code changes in this pass changed solver behavior; this refinement pass focus
 
 ## 3. Latest Run Summary
 
+### 2026-06-20 (kaggle-runs:2026-06-19-v33) — current
+
+From `artifacts/submission/kaggle-runs/2026-06-19-v33/simple_logic_manifest.csv`:
+
+- Loaded tasks: `400`
+- Exported (`onnx_exported=True`): `397`
+- Unsolved (`onnx_exported=False`): `3`
+- Public score: `3590.21` (`SubmissionStatus.COMPLETE`), stable across v23-v25 and v32-v33
+- Solver mix: `340` external_transform_library, `35` transform_library_onnx, `19` spatial_gather, `2` learned_conv_5x5, `1` dynamic_anchor_crop
+- Next upside: wave4 cost audit (`artifacts/analysis/wave4_cost_audit.md`) targets the lowest-scoring exported tasks, not the remaining `3` unsolved
+
+### History
+
 ### 2026-06-04 (kaggle-runs:2026-06-04-0650)
 
 From `artifacts/submission/kaggle-runs/2026-06-04-0650/simple_logic_manifest.csv`:
@@ -52,9 +65,10 @@ From pulled v9 kernel output (`tuannm3812/neurogolf-2026-simple-logic-solver-exp
 | Score | Meaning | Archive behavior |
 | ---: | --- | --- |
 | `253.94` | Valid format, minimal coverage | Early baselines |
-| `2561.08` | `270` validated tasks, 130 missing external | Solved-only, safe |
-| `2949–3068` | Transform library mounted, validated subset | Solved-only, stable plateau |
-| `3133–3235` | Best external-library coverage | Solved-only, peak |
+| `2561.08` | `270` validated tasks, 130 missing external | Solved-only, safe (history) |
+| `2949–3068` | Transform library mounted, validated subset | Solved-only, early plateau (history) |
+| `3133–3235` | Better external-library coverage | Solved-only (history) |
+| `3590.21` | `397` validated tasks, `3` unsolved (wave2-4 reexports) | Solved-only, current plateau |
 | `ERROR` | Scorer rejected archive | Complete or unvalidated archive |
 
 ## 4. Archive Policy

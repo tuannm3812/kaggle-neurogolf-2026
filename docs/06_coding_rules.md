@@ -324,7 +324,7 @@ hidden test set, tying the leaderboard score to code Kaggle actually ran. A
 `ERROR` — the archive reported `400 / 400` in its manifest, but `58` files
 were scorer-incompatible (dynamic tensor shapes, ORT load failures,
 unsupported ops) that only Kaggle's own execution path would have caught.
-Every best-scoring run (`3068.97`, `3235.97`) was a notebook auto-submit.
+Every best-scoring run (`3068.97`, `3235.97`, and the current `3590.21`) was a notebook auto-submit.
 
 Rules:
 
