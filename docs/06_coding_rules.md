@@ -35,7 +35,11 @@ Keep the root small:
   decisions.
 - `README.md` — high-level overview and current best/active score.
 - `scripts/` — small CLI helpers only (env setup, monitoring, notebook
-  hygiene, agent functions), not core solver logic.
+  hygiene, agent functions), not core solver logic. Move a script to
+  `scripts/archive/` once it targets a specific superseded kernel version
+  (named `patch_vNN_*`, `monitor_vNN_*`, `profile_vNN_*`, etc.) and is no
+  longer referenced by the current workflow, instead of deleting it — it
+  still documents how a past issue was diagnosed or fixed.
 - `artifacts/` — generated run artifacts (manifests, submission packages,
   ONNX files, logs, analysis CSVs). Gitignored except where a lightweight
   file directly supports written analysis.

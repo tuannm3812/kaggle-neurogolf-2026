@@ -102,17 +102,18 @@ Current result:
 ├── README.md
 ├── scripts/
 │   ├── clean_notebook_outputs.py
-│   ├── patch_v28_kernel.py
-│   ├── profile_v18_unsolved.py
 │   ├── wave4_cost_audit.py
 │   ├── wave4_probe_externals.py
 │   ├── kaggle_env.sh / .ps1
 │   ├── run_kaggle_export.sh / .ps1
 │   ├── monitor_kaggle_run.sh / .ps1
-│   ├── monitor_v28_run.ps1
 │   ├── setup_kaggle_credentials.ps1
-│   └── agents/
-│       └── neurogolf_agents.py
+│   ├── agents/
+│   │   └── neurogolf_agents.py
+│   └── archive/ (superseded, version-specific one-off tools)
+│       ├── patch_v28_kernel.py
+│       ├── profile_v18_unsolved.py
+│       └── monitor_v28_run.ps1
 ├── docs/
 │   ├── 01_instructions.md
 │   ├── 02_eda_insights.md

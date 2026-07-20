@@ -200,18 +200,44 @@ Phased score targets (phases 0-1 are done, retained for history):
 | --- | ---: | --- | --- |
 | 0 — recover baseline | ≥ `3068` COMPLETE | Re-run main competition kernel (`neurogolf-2026-simple-logic-solver`) | Done (`2026-06-04`) |
 | 1 — expand safely | ≥ `3235` COMPLETE | Fix export validation in v9 kernel, then push dual-library kernel | Done, surpassed (`3590.21` since `2026-06-10`) |
-| 2 — wave4 solver-swap targeting | `~3648`-`3753` | Raise lowest-scoring exported tasks by swapping to a cheaper *existing* local solver | Disproven (`2026-07-20`) — see below |
-| 3 — new solver families or cost reduction | TBD | Either build a genuinely new solver family, or reduce the *cost* of the existing `external_transform_library`/`transform_library_onnx` models directly (e.g. quantization/pruning) | Not yet started |
+| 2 — wave4 solver-swap targeting | `~3648`-`3753` | Raise lowest-scoring exported tasks by swapping to a cheaper *existing* local solver | Disproven (`2026-07-20`) |
+| 3 — native solvers for worst-cost tasks | TBD, see below | Hand-build small native solvers for the specific `A_critical`/`B_high` tasks currently solved only by bloated external-library graphs | Current priority (`2026-07-20`) |
 
-Current score-improvement priorities:
+### 7.1 Cost model (why phase 2 failed and phase 3 can work)
+
+The scorer's per-task score is `max(1, 25 - ln(cost))` where
+`cost = total_params + total_bytes + total_macs`, and Conv layers dominate
+`total_macs` (`c_out * c_in * kernel² * 900`, fixed by the `30x30` grid).
+This is a **log scale**: cutting cost by half only buys ~0.7 points, so
+phase 2's "swap to an existing cheaper solver" search (already
+exhaustively done inside `solve_task()`) could never move much even if it
+weren't already optimal — score gains need order-of-magnitude+ cost cuts.
+
+Inspected the actual exported graph for `task379` (cost `188,976,965`,
+score `5.94`, the worst in the fleet): **1,263 nodes, 233 separate Conv
+layers, 740 boolean comparison ops.** That is not inherent task
+difficulty — it is the external transform-library's generic
+search/DSL-compiled representation being extremely inefficient. A
+hand-built native solver expressing the same transformation directly
+(a handful of ops, not 233 Conv layers) could plausibly cut cost by
+100-10,000x, moving that one task from score `~6` toward `~20+`.
+
+This only pays off for the specific `9` `A_critical` + `29` `B_high`
+tasks (`artifacts/analysis/wave4_cost_audit.md`, regenerate against the
+latest manifest before trusting stale numbers) — it requires genuine
+per-task rule discovery (inspect train pairs, find the actual
+transformation, build/validate a new solver), not a mechanical fix.
+
+Current score-improvement priorities, in order:
 
 1. Submit only through competition-linked kernels; do not manually submit downloaded `submission.zip` files.
-2. Do not re-attempt the wave4 "swap to a cheaper existing local solver" angle: a `2026-07-20` live rerun with full ONNX Runtime validation confirmed `solve_task()` already picks the lowest-cost valid solver for every task (0 of 397 previously-solved tasks would have benefited). The earlier `+58`/`+163` estimates from `wave4_cost_audit.md` assumed this swap was possible; it isn't, given the current solver families.
-3. Raising the `A_critical`/`A+B` tier scores now requires either a genuinely new solver family for those specific tasks, or reducing the cost of the `external_transform_library`/`transform_library_onnx` models themselves (their cost, not their correctness, is what caps the score).
-4. Open question, not yet investigated: the `2026-07-20` rerun solved `2` more tasks (`task101`, `task118`) than v33 but the public score was unchanged at `3590.21` — understand why before assuming future coverage gains move the score.
-5. Track `solver_family`, `validation_scope`, `candidate_count`, `train_fit`, `onnx_exported`, and `reason_rejected`
+2. Do not re-attempt the wave4 "swap to a cheaper existing local solver" angle: proven closed, see §7.1.
+3. Work the worst-cost tasks one at a time: pick from the bottom of a freshly-regenerated `wave4_cost_audit.md`, inspect that task's train pairs directly (`load_tasks`, `task_pairs`), look for a compact rule, prototype a new `try_*_solver` function, validate with full ONNX Runtime pair-checking (never the relaxed mode — see the `2026-07-20` lesson in `docs/06_coding_rules.md` §5), then add it to `solve_task()`'s solver list in both `notebooks/05_simple_solver_export.ipynb` and the `kaggle/` kernel bundle.
+4. Before spending effort on any currently-*unsolved* task (right now only `task115`, deliberately blocklisted for scorer runtime-risk): confirm it's actually part of the scored subset first. `task101`/`task118` were newly solved `2026-07-20` and the public score didn't move at all, suggesting not every task_id counts toward the public score. Re-verify with a controlled single-task before/after comparison if pursuing coverage.
+5. `task115` specifically: `task118` (same runtime-risk blocklist category) was successfully re-enabled `2026-07-20` — worth checking whether `task115`'s original blocking reason still applies before assuming it's permanently out of reach.
+6. Track `solver_family`, `validation_scope`, `candidate_count`, `train_fit`, `onnx_exported`, and `reason_rejected`
    in every manifest row so rule-derived progress is separate from fallback coverage.
-6. Fix the `notebooks/05_simple_solver_export.ipynb` drift from the working `kaggle/` kernel bundles before making further local edits to it (see `docs/06_coding_rules.md`).
+7. Fix the `notebooks/05_simple_solver_export.ipynb` drift from the working `kaggle/` kernel bundles before making further local edits to it (see `docs/06_coding_rules.md`) — lower urgency now since the deployed kernels are unaffected, but blocks safely prototyping new solvers locally in the repo notebook.
 
 Recommended submission kernel:
 
