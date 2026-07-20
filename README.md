@@ -46,7 +46,7 @@ Our project goals are:
 | Palette behavior | `176` same-palette, `224` palette-changing tasks |
 | Simple solver slice | `62` same-shape candidates, `4` simple shape-changing candidates |
 | Best known public score | `3590.21` (all-time and active leaderboard, stable since `2026-06-10`) |
-| Latest export run | `397 / 400` validated (v33, `2026-06-20`); `3` unsolved |
+| Latest export run | `399 / 400` validated (`2026-07-20` rerun); `1` unsolved |
 | Current plateau | `3590.21` since v23 (`2026-06-10`); next upside is wave4-targeted low-score tasks, see `docs/05_agent_score_track.md` |
 
 Solver-development routing:
@@ -76,11 +76,11 @@ Completed:
 
 Current result:
 
-- All-time best and active leaderboard score: `3590.21`, stable across notebook auto-submits v23-v25 and v32-v33 (`2026-06-10` to `2026-06-20`).
-- Latest export run (v33): `397 / 400` validated, `3` unsolved.
+- All-time best and active leaderboard score: `3590.21`, stable across notebook auto-submits v23-v25, v32-v33 (`2026-06-10` to `2026-06-20`), and a `2026-07-20` rerun.
+- Latest export run (`2026-07-20`): `399 / 400` validated, `1` unsolved — `2` more tasks solved than v33 (`task101`, `task118`), but the public score was unchanged at `3590.21`; cause not yet understood, flagged for follow-up rather than assumed.
 - The `2026-06-09` manual v9 submit `ERROR` was resolved; the `2561.08`/`3068.97` plateau history is retired, see `docs/05_agent_score_track.md` for the full run ledger.
 - Submission strategy is notebook-first: competition kernels auto-submit; see [docs/01_instructions.md](docs/01_instructions.md) Section 9.
-- The next score-improvement direction is the wave4 cost-audit targeting: raising the 9 lowest-scoring `A_critical` tasks (mostly `external_transform_library`) toward score `20` is estimated at `+58` public (`~3648`); the top `38` `A+B` tasks toward `18` is estimated at `+163` (`~3753`). See `artifacts/analysis/wave4_cost_audit.md`.
+- The wave4 cost-audit "cheaper local solver" hypothesis (raising `A_critical`/`A+B` tasks toward `20`/`18` for an estimated `+58`/`+163`) was investigated `2026-07-20` and disproven: a live rerun with full ONNX Runtime validation confirmed `solve_task()` already picks the lowest-cost valid solver for every task — 0 of 397 previously-solved tasks would benefit from swapping families. `scripts/wave4_probe_externals.py` had a validation-disabling bug that produced 12 false-positive "improvements"; fixed, see `docs/06_coding_rules.md` §5.
 
 ## 5. Lessons Learned
 

@@ -189,6 +189,15 @@ was never honestly validated.
 - When public score does not move as expected, compare manifests before
   trusting new "coverage": new internal coverage may not overlap the
   publicly scored slice.
+- Never disable `VALIDATE_WITH_ONNXRUNTIME`/`ORT_AVAILABLE` in a probe or
+  analysis script for speed without checking what else keys off those
+  flags. `model_solves_pairs()` returns `True` unconditionally when
+  validation is off, so a "probe" that disables it will report every
+  candidate as solving the task regardless of correctness (found
+  `2026-07-20` in `scripts/wave4_probe_externals.py`: it reported 12 false
+  "cheaper local solver" improvements that a full-validation re-check
+  showed were 0 real ones; a live re-run of `solve_task()` with real
+  validation confirmed 0 tasks would have benefited).
 
 ## 6. Plot Style
 

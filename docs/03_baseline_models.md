@@ -27,7 +27,18 @@ No code changes in this pass changed solver behavior; this refinement pass focus
 
 ## 3. Latest Run Summary
 
-### 2026-06-20 (kaggle-runs:2026-06-19-v33) — current
+### 2026-07-20 (kaggle-runs:2026-07-20-1157) — current
+
+From `artifacts/submission/kaggle-runs/2026-07-20-1157/simple_logic_manifest.csv`:
+
+- Loaded tasks: `400`
+- Exported (`onnx_exported=True`): `399`
+- Unsolved (`onnx_exported=False`): `1`
+- Public score: `3590.21` (`SubmissionStatus.COMPLETE`) — unchanged from v33, despite `2` more tasks solved (`task101` via `partial_background_fill_conv`, `task118` via `runtime_risk_library_onnx`); cause not yet understood
+- `solver_kind` comparison against v33: `0` tasks changed family among the `397` tasks already solved in both runs — confirms `solve_task()` already selects the lowest-cost valid solver everywhere
+- Wave4 "swap to a cheaper local solver" hypothesis: tested and disproven (see §10 History and `docs/06_coding_rules.md` §5). Do not re-run `wave4_probe_externals.py`'s old relaxed-validation mode; it had a bug producing false-positive "improvements" (fixed `2026-07-20`).
+
+### 2026-06-20 (kaggle-runs:2026-06-19-v33) — history
 
 From `artifacts/submission/kaggle-runs/2026-06-19-v33/simple_logic_manifest.csv`:
 
@@ -36,7 +47,6 @@ From `artifacts/submission/kaggle-runs/2026-06-19-v33/simple_logic_manifest.csv`
 - Unsolved (`onnx_exported=False`): `3`
 - Public score: `3590.21` (`SubmissionStatus.COMPLETE`), stable across v23-v25 and v32-v33
 - Solver mix: `340` external_transform_library, `35` transform_library_onnx, `19` spatial_gather, `2` learned_conv_5x5, `1` dynamic_anchor_crop
-- Next upside: wave4 cost audit (`artifacts/analysis/wave4_cost_audit.md`) targets the lowest-scoring exported tasks, not the remaining `3` unsolved
 
 ### History
 
@@ -68,7 +78,7 @@ From pulled v9 kernel output (`tuannm3812/neurogolf-2026-simple-logic-solver-exp
 | `2561.08` | `270` validated tasks, 130 missing external | Solved-only, safe (history) |
 | `2949–3068` | Transform library mounted, validated subset | Solved-only, early plateau (history) |
 | `3133–3235` | Better external-library coverage | Solved-only (history) |
-| `3590.21` | `397` validated tasks, `3` unsolved (wave2-4 reexports) | Solved-only, current plateau |
+| `3590.21` | `399` validated tasks, `1` unsolved (wave2-4 reexports; task coverage grew, score did not) | Solved-only, current plateau |
 | `ERROR` | Scorer rejected archive | Complete or unvalidated archive |
 
 ## 4. Archive Policy

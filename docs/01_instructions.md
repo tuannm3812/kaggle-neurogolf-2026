@@ -172,11 +172,11 @@ Current EDA and diagnostics results:
 Current baseline results:
 
 - The first scorer-compatible solved-task-only submission completed successfully.
-- All-time best and current active leaderboard public score is `3590.21`, stable across notebook auto-submits from `2026-06-10` (v23) through the latest confirmed run `2026-06-20` (v33: `397 / 400` validated, `3` unsolved).
+- All-time best and current active leaderboard public score is `3590.21`, stable across notebook auto-submits from `2026-06-10` (v23) through a `2026-07-20` rerun (`399 / 400` validated, `1` unsolved).
 - The `2026-06-04`-`06-09` history (`3235.97` peak, `3068.97` plateau, `2561.08` active, and the `2026-06-09` manual v9 `SubmissionStatus.ERROR`) is retired; see `docs/05_agent_score_track.md` for the full run ledger.
 - The accepted interface is static one-hot `float32` with shape `[1, 10, 30, 30]`.
 - The accepted archive strategy is solved-task-only: include only validated task models, never invalid placeholders.
-- Transform-library candidates dominate solved coverage; the wave4 cost audit (`artifacts/analysis/wave4_cost_audit.md`) identifies the remaining upside as raising low-scoring `external_transform_library`/`transform_library_onnx` tasks rather than closing new `external_missing` gaps.
+- Transform-library candidates dominate solved coverage. The wave4 "cheaper local solver" hypothesis (`artifacts/analysis/wave4_cost_audit.md`) was tested `2026-07-20` with a live full-validation rerun and disproven: `solve_task()` already picks the lowest-cost valid solver everywhere, so this specific angle is closed. Open question: the `2026-07-20` rerun solved `2` more tasks than v33 (`task101`, `task118`) without moving the public score — cause not yet understood.
 - Notebook 5 focuses on cost-aware input-derived solver export, with public-output fallback disabled by default. Note: the committed `notebooks/05_simple_solver_export.ipynb` has drifted from the working `kaggle/` kernel bundles (a solver-loop bug means it would currently export nothing) — the pushed kernels are unaffected, but the repo notebook needs a fix before further local edits.
 
 ## 6. Solution Principles
@@ -200,14 +200,15 @@ Phased score targets (phases 0-1 are done, retained for history):
 | --- | ---: | --- | --- |
 | 0 — recover baseline | ≥ `3068` COMPLETE | Re-run main competition kernel (`neurogolf-2026-simple-logic-solver`) | Done (`2026-06-04`) |
 | 1 — expand safely | ≥ `3235` COMPLETE | Fix export validation in v9 kernel, then push dual-library kernel | Done, surpassed (`3590.21` since `2026-06-10`) |
-| 2 — wave4 cost targeting | `~3648`-`3753` | Raise lowest-scoring exported tasks per `artifacts/analysis/wave4_cost_audit.md` | Current priority |
+| 2 — wave4 solver-swap targeting | `~3648`-`3753` | Raise lowest-scoring exported tasks by swapping to a cheaper *existing* local solver | Disproven (`2026-07-20`) — see below |
+| 3 — new solver families or cost reduction | TBD | Either build a genuinely new solver family, or reduce the *cost* of the existing `external_transform_library`/`transform_library_onnx` models directly (e.g. quantization/pruning) | Not yet started |
 
 Current score-improvement priorities:
 
 1. Submit only through competition-linked kernels; do not manually submit downloaded `submission.zip` files.
-2. Work the wave4 cost-audit list (`artifacts/analysis/wave4_cost_audit.md`): the 9 lowest-scoring `A_critical` tasks (mostly `external_transform_library`/`transform_library_onnx`, score `< 10`) are the highest-yield target, estimated `+58` public score if raised to `~20`.
-3. Extend to the `A+B` tier (`38` tasks, score `< 12`) for a further estimated `+163` public score.
-4. Re-run `wave4_cost_audit.py` and `wave4_probe_externals.py` against the latest manifest before committing to a specific solver swap, since estimates are ratio-based, not guaranteed.
+2. Do not re-attempt the wave4 "swap to a cheaper existing local solver" angle: a `2026-07-20` live rerun with full ONNX Runtime validation confirmed `solve_task()` already picks the lowest-cost valid solver for every task (0 of 397 previously-solved tasks would have benefited). The earlier `+58`/`+163` estimates from `wave4_cost_audit.md` assumed this swap was possible; it isn't, given the current solver families.
+3. Raising the `A_critical`/`A+B` tier scores now requires either a genuinely new solver family for those specific tasks, or reducing the cost of the `external_transform_library`/`transform_library_onnx` models themselves (their cost, not their correctness, is what caps the score).
+4. Open question, not yet investigated: the `2026-07-20` rerun solved `2` more tasks (`task101`, `task118`) than v33 but the public score was unchanged at `3590.21` — understand why before assuming future coverage gains move the score.
 5. Track `solver_family`, `validation_scope`, `candidate_count`, `train_fit`, `onnx_exported`, and `reason_rejected`
    in every manifest row so rule-derived progress is separate from fallback coverage.
 6. Fix the `notebooks/05_simple_solver_export.ipynb` drift from the working `kaggle/` kernel bundles before making further local edits to it (see `docs/06_coding_rules.md`).
@@ -360,7 +361,7 @@ Why: the `2026-06-09` manual v9 submit failed with `SubmissionStatus.ERROR` beca
 | Track | Kernel slug | Datasets | Target |
 | --- | --- | --- | ---: |
 | Recovery | `tuannm3812/neurogolf-2026-simple-logic-solver` | `karnakbaevarthur/neurogolf-2026-task-transformation-library` | ≥ `3068` (baseline floor, superseded) |
-| Expansion | `tuannm3812/neurogolf-2026-simple-logic-solver-export-v9` | above + `konbu17/neurogolf-2026-blended-401-v117` | ≥ `3648` (wave4 upside target; current active score `3590.21`) |
+| Expansion | `tuannm3812/neurogolf-2026-simple-logic-solver-export-v9` | above + `konbu17/neurogolf-2026-blended-401-v117` | current active score `3590.21`; no confirmed higher target yet (wave4 swap target disproven `2026-07-20`) |
 
 The expansion track has been the active one since the v17-v33 wave-based iterations (`docs/05_agent_score_track.md`); its original `≥ 3235` target was reached and surpassed weeks ago.
 

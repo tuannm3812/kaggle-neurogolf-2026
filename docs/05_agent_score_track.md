@@ -32,6 +32,7 @@
 | kaggle-runs:2026-06-19-v31 | 2026-06-19 11:14:03 | unknown | 367 | 33 | -32 | 0 | onnx | -32 solved |
 | kaggle-runs:2026-06-19-v32 | 2026-06-19 13:17:53 | unknown | 397 | 3 | 30 | 30 | onnx | +30 solved |
 | kaggle-runs:2026-06-19-v33 | 2026-06-20 07:06:11 | unknown | 397 | 3 | 0 | 0 | onnx | no net coverage change |
+| kaggle-runs:2026-07-20-1157 | 2026-07-20 13:12:23 | 3590.2100 | 399 | 1 | 2 | 2 | onnx | +2 solved |
 
 ## Keep this
 - Keep: `kaggle-runs:2026-06-04-0650` improved solved coverage by 2 tasks.
@@ -45,6 +46,7 @@
 - Keep: `kaggle-runs:2026-06-10-v23-wave2-reexport` improved solved coverage by 30 tasks.
 - Keep: `kaggle-runs:2026-06-11-v27-library-fallback` improved solved coverage by 23 tasks.
 - Keep: `kaggle-runs:2026-06-19-v32` improved solved coverage by 30 tasks.
+- Keep: `kaggle-runs:2026-07-20-1157` improved solved coverage by 2 tasks.
 
 ## Change this
 - Change: `local-runs:2026-06-04-0650` did not improve solved coverage; validate new solver families before widening search.

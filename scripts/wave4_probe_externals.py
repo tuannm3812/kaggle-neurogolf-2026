@@ -49,10 +49,19 @@ LOCAL_SOLVERS = [
 
 
 def load_notebook_namespace() -> dict:
-    """Execute the v9 kernel's solver-definition cells with ORT validation off.
+    """Execute the v9 kernel's solver-definition cells with real ORT validation.
 
     Skips the manifest-building cells (stops at the first cell defining
     `manifest_rows`) so only solver functions and helpers get exec'd.
+
+    Deliberately leaves `VALIDATE_WITH_ONNXRUNTIME`/`ORT_AVAILABLE` at their
+    real notebook defaults. `model_solves_pairs()` (defined inside the
+    notebook) returns `True` unconditionally when `VALIDATE_WITH_ONNXRUNTIME`
+    is false, so disabling it here would make every candidate solver report
+    a false-positive "solve" regardless of whether it actually reproduces
+    the task's output pairs. Use `is_scorer_compatible(..., skip_ort_init=True)`
+    at the call site instead if only the slower scorer-runtime-compatibility
+    check needs to be skipped for speed.
     """
     nb = json.loads(NOTEBOOK.read_text())
     chunks: list[str] = []
@@ -77,14 +86,8 @@ def load_notebook_namespace() -> dict:
     future_line = "from __future__ import annotations\n"
     if future_line.strip() in code:
         code = future_line + code.replace(future_line, "")
-    code = code.replace(
-        "VALIDATE_WITH_ONNXRUNTIME = True",
-        "VALIDATE_WITH_ONNXRUNTIME = False",
-    )
     ns: dict = {"__name__": "wave4_probe"}
     exec(compile(code, str(NOTEBOOK), "exec"), ns, ns)
-    ns["VALIDATE_WITH_ONNXRUNTIME"] = False
-    ns["ORT_AVAILABLE"] = False
     return ns
 
 
