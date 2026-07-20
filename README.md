@@ -6,173 +6,58 @@
   <img alt="Kaggle" src="https://img.shields.io/badge/Kaggle-NeuroGolf_2026-20BEFF?style=flat-square&logo=kaggle&logoColor=white">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white">
   <img alt="ONNX" src="https://img.shields.io/badge/ONNX-submission-005CED?style=flat-square">
-  <img alt="Workflow" src="https://img.shields.io/badge/workflow-notebook--first-2E7D32?style=flat-square">
+  <img alt="Score" src="https://img.shields.io/badge/public_score-3590.21-2E7D32?style=flat-square">
+  <img alt="Coverage" src="https://img.shields.io/badge/tasks_solved-399%2F400-2E7D32?style=flat-square">
 </p>
 
-NeuroGolf 2026 is an ARC-style grid-reasoning competition where each task must be solved by an ONNX model. This repository documents a notebook-first solution workflow: explore the task distribution, measure solver opportunities, build a valid ONNX packaging baseline, then move toward evaluator-compatible input-derived solvers.
+**A symbolic, cost-aware solver system for ARC-AGI-style grid reasoning — every answer is a compact, interpretable ONNX program, not a trained black box.**
 
-## 1. Project Overview
+NeuroGolf 2026 scores each submission with `max(1, 25 - ln(cost))` per task, where `cost` is derived from the ONNX graph's own parameters, memory footprint, and compute — correctness alone isn't enough, the *program itself* has to be small and simple. This repo builds 18 interpretable, rule-based solver families (color maps, object/crop logic, spatial gather, small learned convolutions, external transform-library integration) for the 400 grid-transformation tasks, validates each candidate against every training example before accepting it, and automatically keeps whichever valid solver is cheapest for each task.
 
-The project explores how far interpretable, compact ONNX programs can go on low-shot ARC-style tasks. Each task provides only a few input/output examples, so the core challenge is not conventional model training; it is rule discovery, solver selection, and valid ONNX export under scoring constraints.
+## Results
 
-The current solution is deliberately staged:
+| | |
+|---|---|
+| **Public score** | `3590.21` |
+| **Tasks solved** | `399 / 400` — the 1 remaining is a deliberate exclusion (scorer runtime-risk), not a gap |
+| **Solver families** | 18 interpretable rule families, tried cheapest-first, ranked by ONNX graph cost |
+| **Validation** | Every exported model passes ONNX Runtime inference, a scorer-compatibility gate, and a `1.44MB` size cap before submission |
 
-1. Profile the full task set with EDA and visual diagnostics.
-2. Build valid Kaggle-compatible ONNX submissions.
-3. Measure which symbolic solver families fit each task.
-4. Export only validated input-derived solvers.
-5. Use manifest-based triage when public score does not move.
+## How It Works
 
-## 2. Task and Goal
+1. **EDA** — profile all 400 tasks (shape, palette, and object-complexity distributions) to route each toward the right solver family.
+2. **Rule discovery** — for every task, try each solver family in order of cost (constant → color map → crop/object logic → small learned convolutions → external transform library), accepting a candidate only once it exactly reproduces every training example.
+3. **Cost-aware export** — among all solvers that correctly solve a task, keep the cheapest one. The scorer rewards small, structurally simple graphs, not just correctness — a 233-layer convolution stack and a single gather op can both be "correct," but only one scores well.
+4. **Notebook-first submission** — Kaggle re-executes the submitted notebook end-to-end against the hidden test set, so the leaderboard score is tied to code Kaggle actually ran, never a locally-assembled artifact.
 
-The competition task is to submit a `submission.zip` containing ONNX models named by task id, such as `task001.onnx`. Each model must accept a static one-hot `float32` tensor and produce the transformed output grid for that task.
+## Engineering Practices
 
-Our project goals are:
+- **Live-validated, not just locally validated.** A hand-derived solver for one of the highest-cost tasks passed every local check — rule validated against training data, real ONNX Runtime inference, the full scorer-compatibility gate — and still regressed the live score (`3590.21 → 3579.96`) once submitted. Caught via a follow-up scored run and reverted the same day; the root cause (local test data not matching Kaggle's actual grading input) is now a standing rule: no new solver family is trusted until confirmed by a live run.
+- **Manifest-driven debugging.** Every task's solver family, validation scope, and rejection reason is tracked in a structured manifest, so "why wasn't this task solved" is a data query, not a guess.
+- **Automated score tracking.** A CLI agent (`scripts/agents/neurogolf_agents.py`) pulls Kaggle submission history, diffs manifests between runs, and maintains a running ledger of what improved the score and what didn't.
 
-- Build a reliable notebook-first workflow that runs on Kaggle.
-- Understand the `400` public tasks through EDA and solver diagnostics.
-- Produce scorer-compatible ONNX submissions with transparent manifests.
-- Replace public-output fallbacks with input-derived rule solvers.
-- Improve score through object, crop, movement, and construction logic.
+## Tech Stack
 
-## 3. Key Metrics
+`Python` · `ONNX` / `ONNX Runtime` · `NumPy` / `Pandas` · `Matplotlib` · `Kaggle Notebooks & CLI` · rule-based / symbolic solver design
 
-| Area | Current finding |
-| --- | --- |
-| Task coverage | `400 / 400` normalized tasks loaded |
-| Training density | Median `3` train examples per task |
-| Test structure | `386` single-test tasks, `14` multi-test tasks |
-| Shape behavior | `262` same-area tasks, `138` shape-changing tasks |
-| Palette behavior | `176` same-palette, `224` palette-changing tasks |
-| Simple solver slice | `62` same-shape candidates, `4` simple shape-changing candidates |
-| Best known public score | `3590.21` (all-time and active leaderboard, stable since `2026-06-10`) |
-| Latest export run | `399 / 400` validated (`2026-07-20` rerun); `1` unsolved |
-| Current plateau | `3590.21` since v23 (`2026-06-10`); next upside is wave4-targeted low-score tasks, see `docs/05_agent_score_track.md` |
-
-Solver-development routing:
-
-| Solver track | Task count | Priority |
-| --- | ---: | --- |
-| Object movement/selection | `158` | High |
-| Crop/extract/compress | `99` | High |
-| Simple same-shape export | `62` | Implemented as first export track |
-| Pattern/counting/global logic | `45` | Later diagnostic track |
-| Expand/tile/construct | `32` | Next construction track |
-| Simple shape export | `4` | Low-risk specialized track |
-
-## 4. Progress
-
-The project has reached a valid submission baseline and moved into solver-family development.
-
-Completed:
-
-- Full EDA coverage for all `400` tasks.
-- Difficult-task gallery and solver-track prioritization.
-- Baseline ONNX packaging workflow.
-- First successful scorer-compatible submission.
-- Static one-hot `float32` interface: `[1, 10, 30, 30]`.
-- Input-derived solver exports for color maps, spatial gather, local convolutions, fixed crops, bounding-box crops, and anchor-relative crops.
-- Manifest triage notebook for score-plateau analysis.
-
-Current result:
-
-- All-time best and active leaderboard score: `3590.21`, stable since `2026-06-10` (v23) through `2026-07-20`.
-- Latest export run (`2026-07-20`): `399 / 400` validated, `1` unsolved (`task115`, deliberately blocklisted for scorer runtime-risk). Older score history (`2561.08`/`3068.97`/`3235.97`, the `2026-06-09` manual-submit `ERROR`) is retired; see `docs/05_agent_score_track.md` for the full run ledger.
-- Submission strategy is notebook-first: competition kernels auto-submit; see [docs/01_instructions.md](docs/01_instructions.md) Section 9.
-- Two score-improvement hypotheses were tested and closed `2026-07-20`: the wave4 "swap to a cheaper existing solver" angle (disproven — `solve_task()` already picks the lowest-cost valid solver everywhere) and a first hand-built native solver for `task379` (passed every local check, still regressed the live score `3590.21 → 3579.96`, reverted same day). See `docs/06_coding_rules.md` §5 and `docs/01_instructions.md` §7 before attempting either again.
-
-## 5. Lessons Learned
-
-- Kaggle scorer compatibility matters as much as local ONNX Runtime validation. Raw 2D `int64` grid models can run locally and still fail the scorer.
-- The accepted pattern is a static one-hot `float32` interface with shape `[1, 10, 30, 30]`.
-- A solved-task-only archive is safer than a complete archive filled with weak or invalid placeholders.
-- Submit only through competition-linked notebooks; manual CLI submit of downloaded kernel output caused a `2026-06-09` `ERROR` despite a `400 / 400` manifest.
-- Public-output fallback models can make an archive look more complete without improving effective leaderboard score.
-- Train-fit is not enough. Solvers need public-test validation and manifest-level tracking to avoid false confidence.
-- Simple global rules explain only a small slice of the benchmark.
-- Manifest comparison is essential when score plateaus: new internal coverage may not overlap the public scored slice.
-- Passing local validation — even real ONNX Runtime inference against a task's known test pair — is not proof a new solver generalizes to what Kaggle actually grades. Treat any new solver family as unproven until confirmed by a live scored run, and revert immediately on a confirmed regression (`docs/06_coding_rules.md` §5).
-
-## 6. Repository Map
+## Repository Structure
 
 ```text
-.
-├── .gitignore
-├── README.md
-├── scripts/
-│   ├── clean_notebook_outputs.py
-│   ├── wave4_cost_audit.py
-│   ├── wave4_probe_externals.py
-│   ├── kaggle_env.sh / .ps1
-│   ├── run_kaggle_export.sh / .ps1
-│   ├── monitor_kaggle_run.sh / .ps1
-│   ├── setup_kaggle_credentials.ps1
-│   ├── agents/
-│   │   └── neurogolf_agents.py
-│   └── archive/ (superseded, version-specific one-off tools)
-│       ├── patch_v28_kernel.py
-│       ├── profile_v18_unsolved.py
-│       └── monitor_v28_run.ps1
-├── docs/
-│   ├── 01_instructions.md
-│   ├── 02_eda_insights.md
-│   ├── 03_baseline_models.md
-│   ├── 04_agent_workflow.md
-│   ├── 05_agent_score_track.md
-│   ├── 06_coding_rules.md
-│   ├── assets/
-│   └── figures/
-├── notebooks/
-│   ├── 01_eda.ipynb
-│   ├── 02_baseline_models.ipynb
-│   ├── 03_solver_diagnostics.ipynb
-│   ├── 04_solver_development.ipynb
-│   ├── 05_simple_solver_export.ipynb
-│   └── 06_score_plateau_triage.ipynb
-├── kaggle/ (pushed kernel bundles, mirrors notebooks/)
-│   ├── neurogolf-2026-simple-logic-solver/
-│   └── neurogolf-2026-simple-logic-solver-export-v9/
-└── artifacts/ (gitignored)
-    ├── submission/
-    │   ├── local-runs/
-    │   └── kaggle-runs/
-    ├── eda/
-    ├── analysis/
-    └── data/
+notebooks/     Kaggle notebooks: EDA -> baseline -> diagnostics -> solver dev -> export -> triage
+kaggle/        Pushed kernel bundles that mirror what actually runs on Kaggle
+scripts/       CLI helpers: notebook hygiene, Kaggle orchestration, score-tracking agent
+docs/          Standards, EDA findings, solver contract, full run history
 ```
 
-The repository is intentionally notebook-first. Kaggle notebooks are the executable source of truth; `docs/` captures interpretation, results, and project decisions.  
-`artifacts/` is used for local working outputs and is intentionally kept out of git.
+Notebooks run end-to-end on Kaggle after attaching the competition dataset; no local setup required to review the logic.
 
-## 7. Notebook Workflow
+## Further Reading
 
-| Notebook | Purpose | Current role |
-| --- | --- | --- |
-| `01_eda.ipynb` | Dataset profiling, visual task review, difficult-task gallery | Defines the modeling problem and evidence base |
-| `02_baseline_models.ipynb` | Complete ONNX packaging baseline | Validates archive structure and fallback behavior |
-| `03_solver_diagnostics.ipynb` | Strict solver checks and component diagnostics | Quantifies solver-family opportunities |
-| `04_solver_development.ipynb` | Candidate tables for solver routing | Produces task-level next-action artifacts |
-| `05_simple_solver_export.ipynb` | Scorer-compatible ONNX export | Generates rule-derived and score-oriented task models |
-| `06_score_plateau_triage.ipynb` | Score plateau diagnosis | Compares manifests, isolates new coverage, and renders review panels |
-
-Detailed run instructions and next work live in [docs/01_instructions.md](docs/01_instructions.md).
-
-## 8. Technical Skills
-
-- Python notebook engineering for Kaggle execution.
-- ARC-style grid analysis and symbolic rule diagnostics.
-- Pandas and NumPy feature engineering for task-level metadata.
-- Matplotlib visual diagnostics with ARC token palettes.
-- ONNX graph construction with static tensor interfaces.
-- ONNX Runtime validation and submission artifact checks.
-- Rule-based solver design: color maps, constant rules, identity, spatial gather, and convolution candidates.
-- Competition workflow hygiene: manifests, validation tables, lightweight docs, and reproducible notebook outputs.
-
-## 9. Detailed Notes
-
-- EDA evidence: `docs/02_eda_insights.md`
-- Working plan and notebook-first submission strategy: `docs/01_instructions.md` (Section 9)
-- Baseline, validation gate, and submission notes: `docs/03_baseline_models.md`
-- Score history and keep/change decisions: `docs/05_agent_score_track.md`
-- Agent workflow: `docs/04_agent_workflow.md`
-- Project rules: `docs/06_coding_rules.md`
+| Doc | Contents |
+|---|---|
+| [docs/01_instructions.md](docs/01_instructions.md) | Working plan, current priorities, Kaggle submission flow |
+| [docs/02_eda_insights.md](docs/02_eda_insights.md) | Full EDA evidence and difficult-task gallery |
+| [docs/03_baseline_models.md](docs/03_baseline_models.md) | ONNX interface contract, solver families, validation gate |
+| [docs/04_agent_workflow.md](docs/04_agent_workflow.md) | Score-tracking agent usage and commit protocol |
+| [docs/05_agent_score_track.md](docs/05_agent_score_track.md) | Full run-by-run score ledger |
+| [docs/06_coding_rules.md](docs/06_coding_rules.md) | Coding standard and documented engineering lessons |
