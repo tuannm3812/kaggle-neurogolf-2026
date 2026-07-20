@@ -202,6 +202,21 @@ was never honestly validated.
   "cheaper local solver" improvements that a full-validation re-check
   showed were 0 real ones; a live re-run of `solve_task()` with real
   validation confirmed 0 tasks would have benefited).
+- Passing the local pre-export validation gate — including real ONNX
+  Runtime inference against a task's known local `test` pair — is
+  **not proof a new solver generalizes to what Kaggle actually grades**.
+  A `barrier_crossing` solver added `2026-07-20` for `task379` passed
+  every local check (rule validated fresh against all train pairs,
+  real ORT inference against the local test pair, `is_scorer_compatible`,
+  `model_passes_v9_export`, a full `solve_task()` dry run) and still
+  caused a live score regression (`3590.21` → `3579.96`) once submitted —
+  the fixed gather indices were almost certainly overfit to the specific
+  local test grid rather than a genuinely general rule, for a task whose
+  correct mapping is input-structure-dependent rather than a fixed
+  formula. Treat any *new solver family* (not a parameter tweak to an
+  existing one) as unproven until confirmed by a live scored run, and
+  revert immediately on any confirmed regression instead of leaving it
+  live to investigate further.
 
 ## 6. Plot Style
 
