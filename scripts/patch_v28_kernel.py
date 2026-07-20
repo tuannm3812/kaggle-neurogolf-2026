@@ -8,11 +8,18 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-NB_PATH = ROOT / "kaggle/neurogolf-2026-simple-logic-solver-export-v9/neurogolf-2026-simple-logic-solver-export-v9.ipynb"
-ALLOWLIST_PY = ROOT / "kaggle/neurogolf-2026-simple-logic-solver-export-v9/v9_allowlist.py"
+KERNEL_DIR = ROOT / "kaggle" / "neurogolf-2026-simple-logic-solver-export-v9"
+NB_PATH = KERNEL_DIR / "neurogolf-2026-simple-logic-solver-export-v9.ipynb"
+ALLOWLIST_PY = KERNEL_DIR / "v9_allowlist.py"
 
 
 def patch_source(src: str) -> tuple[str, list[str]]:
+    """Apply the v28 stability patches to one notebook cell's source text.
+
+    Returns the (possibly unchanged) source and the list of patch notes
+    that were applied, matched by exact substring against known v9 cell
+    content.
+    """
     notes: list[str] = []
 
     old_roots = """TRANSFORM_LIBRARY_ROOT_CANDIDATES = (
@@ -190,6 +197,7 @@ def audit_manifest_exports(manifest_df) -> tuple[Any, list[tuple[str, str]]]:
 
 
 def sync_allowlist_py(text: str) -> str:
+    """Mirror the notebook's allowlist edit into the standalone allowlist file."""
     if "'task100', 'task101', 'task102'" in text:
         text = text.replace("'task100', 'task101', 'task102'", "'task100', 'task102'")
     return text

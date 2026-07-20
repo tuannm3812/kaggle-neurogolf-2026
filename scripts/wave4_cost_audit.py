@@ -27,6 +27,7 @@ LIBRARY_KINDS = {
 
 
 def exported_rows(path: Path) -> list[dict]:
+    """Return only the manifest rows that were actually exported."""
     rows = list(csv.DictReader(path.open()))
     return [
         r

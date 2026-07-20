@@ -11,16 +11,15 @@ import argparse
 import csv
 import os
 import re
-import time
 import shutil
 import subprocess
 import tempfile
+import time
 from collections import Counter
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
-from datetime import datetime
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_KAGGLE_BIN = shutil.which("kaggle") or "python -m kaggle"
@@ -82,6 +81,16 @@ def parse_timestamp(text: str) -> Optional[float]:
     return None
 
 
+@dataclass(frozen=True)
+class SubmissionRecord:
+    file_name: str
+    date: str
+    description: str
+    status: str
+    public_score: Optional[float]
+    private_score: str
+
+
 def infer_scores_from_records(
     snapshots: list[Dict[str, Any]],
     submissions: List[SubmissionRecord],
@@ -128,16 +137,6 @@ def infer_scores_from_records(
             overrides[run_label] = best_match[1]
 
     return overrides
-
-
-@dataclass(frozen=True)
-class SubmissionRecord:
-    file_name: str
-    date: str
-    description: str
-    status: str
-    public_score: Optional[float]
-    private_score: str
 
 
 def _run_command(cmd: List[str], env: Dict[str, str]) -> str:
@@ -219,6 +218,7 @@ def fetch_kaggle_submissions(
     kaggle_bin: str = DEFAULT_KAGGLE_BIN,
     limit: int = 20,
 ) -> List[SubmissionRecord]:
+    """Fetch and parse `kaggle competitions submissions` table output."""
     active_dir, cleanup_dir = _resolve_kaggle_config_dir(config_dir, account)
     env = os.environ.copy()
     env["KAGGLE_CONFIG_DIR"] = str(active_dir)
@@ -277,6 +277,7 @@ def load_csv_rows(path: Path) -> List[Dict[str, Any]]:
 
 
 def manifest_summary(manifest_path: Path) -> Dict[str, Any]:
+    """Aggregate a `simple_logic_manifest.csv` into export/rejection counts."""
     rows = load_csv_rows(manifest_path)
     total = len(rows)
     exported = [r for r in rows if parse_bool(r.get("onnx_exported"))]
@@ -413,6 +414,7 @@ def build_track_report(
     auto_score_records: List[SubmissionRecord] | None = None,
     score_match_window_minutes: int = 90,
 ) -> tuple[str, list[Dict[str, str]]]:
+    """Build the run-ledger Markdown report and history rows for `track`."""
     rows = []
     snapshots = []
 
@@ -604,6 +606,7 @@ def build_strategy_report(
     submission_records: List[SubmissionRecord],
     manifest_path: Optional[Path],
 ) -> str:
+    """Render the `report` command's score + manifest diagnostics Markdown."""
     lines: List[str] = []
     lines.append("# NeuroGolf Agent Report")
     lines.append("")
@@ -665,6 +668,7 @@ def run_compare(
     base_manifest: Path,
     head_manifest: Path,
 ) -> str:
+    """Diff two manifests and render the recovered/still-unresolved report."""
     base = manifest_summary(base_manifest)
     head = manifest_summary(head_manifest)
 

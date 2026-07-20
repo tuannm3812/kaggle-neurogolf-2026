@@ -11,8 +11,13 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-NOTEBOOK = ROOT / "kaggle/neurogolf-2026-simple-logic-solver-export-v9/neurogolf-2026-simple-logic-solver-export-v9.ipynb"
-MANIFEST = ROOT / "artifacts/submission/kaggle-runs/2026-06-10-v21-score-opt-partial-bg/simple_logic_manifest.csv"
+KERNEL_DIR = ROOT / "kaggle" / "neurogolf-2026-simple-logic-solver-export-v9"
+NOTEBOOK = KERNEL_DIR / "neurogolf-2026-simple-logic-solver-export-v9.ipynb"
+MANIFEST = (
+    ROOT
+    / "artifacts/submission/kaggle-runs/2026-06-10-v21-score-opt-partial-bg"
+    / "simple_logic_manifest.csv"
+)
 TASK_DIR = Path(os.environ.get("NEUROGOLF_TASK_DIR", "/tmp/neurogolf-data/extracted"))
 OUT_CSV = ROOT / "artifacts/analysis/v21_unsolved_profile.csv"
 OUT_MD = ROOT / "artifacts/analysis/v21_unsolved_profile.md"
@@ -37,6 +42,11 @@ LOCAL_SOLVERS = [
 
 
 def load_notebook_namespace() -> dict:
+    """Execute the v9 kernel's solver-definition cells and return its namespace.
+
+    Skips the manifest-building cells (stops at the first cell defining
+    `manifest_rows`) so only solver functions and helpers get exec'd.
+    """
     nb = json.loads(NOTEBOOK.read_text())
     chunks: list[str] = []
     for cell in nb["cells"]:
@@ -70,6 +80,7 @@ def load_notebook_namespace() -> dict:
 
 
 def exported_manifest(path: Path) -> tuple[dict[str, dict], dict[str, dict]]:
+    """Split a manifest CSV into (exported, unsolved) rows keyed by task id."""
     rows = list(csv.DictReader(path.open()))
     exported, unsolved = {}, {}
     for row in rows:
@@ -81,6 +92,7 @@ def exported_manifest(path: Path) -> tuple[dict[str, dict], dict[str, dict]]:
 
 
 def block_bucket(reason: str) -> str:
+    """Group a manifest `reason_rejected` code into a coarse blocker bucket."""
     if "export_not_in_v9_allowlist" in reason:
         return "allowlist_blocked"
     if "runtime_risk" in reason:
@@ -91,6 +103,7 @@ def block_bucket(reason: str) -> str:
 
 
 def probe_local_solvers(ns: dict, task_id: str, task: dict) -> list[str]:
+    """Try every local solver family against a task and return the ones that fit."""
     pairs = ns["task_pairs"](task)
     if not pairs:
         return []
@@ -165,6 +178,7 @@ def truthy(value: str) -> bool:
 
 
 def eda_solver_hints(c: dict, same: dict, shape: dict, ed: dict) -> list[str]:
+    """Derive candidate solver-family hints from precomputed EDA/candidate rows."""
     hints: list[str] = []
     for label, col in SOLVER_HINTS:
         for src in (c, same, shape):
@@ -188,6 +202,7 @@ def eda_solver_hints(c: dict, same: dict, shape: dict, ed: dict) -> list[str]:
 
 
 def eda_feasibility(row: dict) -> int:
+    """Score a row's near-term solvability to rank the recommended waves."""
     score = 0
     if row["block_bucket"] == "allowlist_blocked":
         score += 25
@@ -211,6 +226,7 @@ def eda_feasibility(row: dict) -> int:
 
 
 def eda_tier(row: dict) -> str:
+    """Assign a row to a recommended-wave priority tier."""
     if row.get("local_solver_hits"):
         return "A_probe_pass"
     if row["next_action"].startswith("export simple") and int(row.get("hint_count", 0)) >= 1:

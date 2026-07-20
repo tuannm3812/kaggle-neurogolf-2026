@@ -10,7 +10,8 @@ import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-NOTEBOOK = ROOT / "kaggle/neurogolf-2026-simple-logic-solver-export-v9/neurogolf-2026-simple-logic-solver-export-v9.ipynb"
+KERNEL_DIR = ROOT / "kaggle" / "neurogolf-2026-simple-logic-solver-export-v9"
+NOTEBOOK = KERNEL_DIR / "neurogolf-2026-simple-logic-solver-export-v9.ipynb"
 MANIFEST = Path(
     os.environ.get(
         "WAVE4_MANIFEST",
@@ -48,6 +49,11 @@ LOCAL_SOLVERS = [
 
 
 def load_notebook_namespace() -> dict:
+    """Execute the v9 kernel's solver-definition cells with ORT validation off.
+
+    Skips the manifest-building cells (stops at the first cell defining
+    `manifest_rows`) so only solver functions and helpers get exec'd.
+    """
     nb = json.loads(NOTEBOOK.read_text())
     chunks: list[str] = []
     for cell in nb["cells"]:
@@ -83,6 +89,7 @@ def load_notebook_namespace() -> dict:
 
 
 def score_of(ns: dict, model) -> float:
+    """Approximate the scorer's cost-based points for a candidate model."""
     return max(1.0, 25.0 - math.log(max(1, ns["estimate_model_cost"](model))))
 
 
